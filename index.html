@@ -2,30 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>zallkyre-bot status</title>
     <style>
-        body { background: #0f0f0f; color: #00ff00; font-family: monospace; text-align: center; padding: 50px; }
-        .box { border: 1px solid #00ff00; padding: 20px; display: inline-block; }
-        h1 { text-transform: lowercase; }
-        .stat { font-size: 1.5em; margin: 10px 0; }
+        body { background: #0a0a0a; color: #00ff41; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .dashboard { border: 2px solid #00ff41; padding: 30px; box-shadow: 0 0 15px #00ff41; background: #000; text-align: left; min-width: 300px; }
+        h1 { border-bottom: 1px solid #00ff41; padding-bottom: 10px; font-size: 1.2rem; }
+        .stat { margin: 15px 0; font-size: 1.1rem; }
+        .online { color: #00ff41; }
+        .offline { color: #ff0000; }
+        .sync { font-size: 0.7rem; color: #666; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h1>zallkyre-bot // status</h1>
-        <div id="status" class="stat">checking...</div>
-        <div id="temp" class="stat">temp: --</div>
-        <div id="requests" class="stat">handled: --</div>
+    <div class="dashboard">
+        <h1>> zallkyre_bot_interface</h1>
+        <div class="stat">status: <span id="status" class="online">online</span></div>
+        <div class="stat">pi_temp: <span id="temp">--</span></div>
+        <div class="stat">requests: <span id="req">--</span></div>
+        <div class="stat">cpu_load: <span id="cpu">--</span></div>
+        <div class="sync">last_sync: <span id="sync">--</span></div>
     </div>
-
     <script>
-        fetch('data.json')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('temp').innerText = 'pi temp: ' + data.temp;
-                document.getElementById('requests').innerText = 'requests: ' + data.requests;
-                document.getElementById('status').innerText = 'status: online';
-            });
+        async function updateStats() {
+            try {
+                const res = await fetch('data.json?t=' + Date.now());
+                const data = await res.json();
+                document.getElementById('temp').innerText = data.temp;
+                document.getElementById('req').innerText = data.requests;
+                document.getElementById('cpu').innerText = data.cpu + '%';
+                document.getElementById('sync').innerText = data.last_update;
+                document.getElementById('status').innerText = 'active';
+            } catch (e) {
+                document.getElementById('status').innerText = 'offline';
+                document.getElementById('status').className = 'offline';
+            }
+        }
+        setInterval(updateStats, 30000);
+        updateStats();
     </script>
 </body>
 </html>
