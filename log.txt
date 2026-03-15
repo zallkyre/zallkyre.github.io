@@ -1,0 +1,4 @@
+[2026-03-08 14:36:34] [INFO    ] discord.client: logging in using static token
+[2026-03-08 14:36:35] [INFO    ] discord.gateway: Shard ID None has connected to Gateway (Session ID: a71b484f7f9093dcc1c4ea8d7a611035).
+[2026-03-08 14:50:52] zallkyre: test
+[2026-03-08 14:51:03] zallkyre: are you free or no free version
