@@ -1,181 +1,484 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>zallkyre — hardware + software</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #0d0d0f;
-    color: #e8e8ea;
-    font-family: ui-monospace, 'Cascadia Code', monospace;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  header { padding: 60px 20px 30px; text-align: center; }
-  h1 { font-size: 2.4rem; letter-spacing: -0.03em; }
-  header p { color: #8a8a93; font-size: 0.9rem; margin-top: 8px; }
-  main { width: 100%; max-width: 640px; padding: 0 16px 60px; display: flex; flex-direction: column; gap: 34px; }
-  section h2 {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    color: #8a8a93;
-    margin-bottom: 12px;
-    border-bottom: 1px solid #26262c;
-    padding-bottom: 8px;
-  }
-  .card {
-    background: #16161a;
-    border: 1px solid #26262c;
-    border-radius: 10px;
-    padding: 12px 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-    text-decoration: none;
-    color: #e8e8ea;
-    transition: border-color 0.15s ease;
-  }
-  .card:hover { border-color: #e8e8ea; }
-  .card .name { font-weight: 600; font-size: 0.9rem; }
-  .card .desc { color: #8a8a93; font-size: 0.78rem; margin-top: 3px; }
-  .card .tag {
-    flex-shrink: 0;
-    font-size: 0.65rem;
-    color: #0d0d0f;
-    background: #e8e8ea;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-weight: 600;
-  }
-  .tag.green { background: #3ddc84; }
-  .tag.gray { background: #3a3a42; color: #e8e8ea; }
-  .stack { display: flex; flex-wrap: wrap; gap: 6px; }
-  .stack span {
-    background: #16161a;
-    border: 1px solid #26262c;
-    border-radius: 6px;
-    padding: 4px 10px;
-    font-size: 0.75rem;
-    color: #c8c8cc;
-  }
-  footer { color: #8a8a93; font-size: 0.7rem; padding: 20px; text-align: center; }
-  footer a { color: #8a8a93; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>volos // rp2040 deck & bench</title>
+  <style>
+    :root {
+      --pcb-bg: #0c0d10;
+      --dot: #1b1c24;
+      --panel: #13141a;
+      --panel-edge: #232530;
+      --silkscreen: #9499ad;
+      --copper: #c77d46;
+      --trace-green: #10b981;
+      --slate: #64748b;
+      --text: #e1e3ec;
+      --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--pcb-bg);
+      background-image: radial-gradient(var(--dot) 1.2px, transparent 1.2px);
+      background-size: 18px 18px;
+      color: var(--text);
+      font-family: var(--mono);
+      line-height: 1.45;
+      padding: 40px 16px 80px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .board {
+      width: 100%;
+      max-width: 680px;
+      background: var(--panel);
+      border: 1px solid var(--panel-edge);
+      border-radius: 4px;
+      position: relative;
+      padding: 28px 24px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+    }
+
+    .screw {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffe175 25%, #926d24 85%);
+      border: 1px solid #4a3407;
+      box-shadow: inset 0 0 2px rgba(0,0,0,0.8);
+    }
+    .screw::after {
+      content: "";
+      position: absolute;
+      top: 6px;
+      left: 2px;
+      width: 8px;
+      height: 1.5px;
+      background: #3b2a09;
+    }
+    .screw.tl { top: 10px; left: 10px; transform: rotate(24deg); }
+    .screw.tr { top: 10px; right: 10px; transform: rotate(78deg); }
+    .screw.bl { bottom: 10px; left: 10px; transform: rotate(115deg); }
+    .screw.br { bottom: 10px; right: 10px; transform: rotate(45deg); }
+
+    .silk-head {
+      border-bottom: 1px dashed var(--panel-edge);
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .silk-brand h1 {
+      font-size: 1.5rem;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .tagline {
+      font-size: 0.76rem;
+      color: var(--copper);
+      margin-top: 4px;
+      letter-spacing: 0.02em;
+    }
+
+    .silk-meta {
+      font-size: 0.72rem;
+      color: var(--silkscreen);
+      text-align: right;
+    }
+
+    .silk-meta span {
+      display: inline-block;
+      margin-left: 8px;
+      color: var(--copper);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--trace-green) !important;
+    }
+    .status-badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: var(--trace-green);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--trace-green);
+    }
+
+    /* specs strip with multiplier emphasis */
+    .specs-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 32px;
+      border: 1px dashed var(--panel-edge);
+      padding: 14px 12px;
+      border-radius: 3px;
+    }
+
+    .spec-cell {
+      border-right: 1px dashed var(--panel-edge);
+      padding-right: 8px;
+    }
+    .spec-cell:last-child { border-right: none; }
+
+    .spec-multiplier {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--trace-green);
+      line-height: 1.1;
+    }
+
+    .spec-actual {
+      font-size: 0.72rem;
+      color: var(--text);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    .spec-desc {
+      font-size: 0.63rem;
+      color: var(--silkscreen);
+      text-transform: uppercase;
+      line-height: 1.25;
+      margin-top: 2px;
+    }
+
+    /* charts */
+    .chart-unit {
+      margin-bottom: 28px;
+    }
+
+    .chart-label {
+      font-size: 0.75rem;
+      color: var(--text);
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      border-left: 2px solid var(--copper);
+      padding-left: 8px;
+    }
+
+    .chart-label span {
+      color: var(--silkscreen);
+      font-size: 0.7rem;
+    }
+
+    .chart-box {
+      height: 200px;
+      position: relative;
+      width: 100%;
+    }
+
+    /* adjacent projects */
+    .sub-section {
+      border-top: 1px dashed var(--panel-edge);
+      padding-top: 24px;
+      margin-top: 24px;
+    }
+
+    .sub-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--copper);
+      margin-bottom: 14px;
+    }
+
+    .work-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .item {
+      background: #0f1015;
+      border: 1px solid var(--panel-edge);
+      padding: 10px 12px;
+      border-radius: 3px;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: border-color 0.1s ease;
+    }
+
+    .item:hover {
+      border-color: var(--copper);
+    }
+
+    .item-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .item-desc {
+      font-size: 0.68rem;
+      color: var(--silkscreen);
+      margin-top: 2px;
+    }
+
+    .chips {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      background: #090a0d;
+      border: 1px solid #1f212b;
+      padding: 2px 7px;
+      font-size: 0.68rem;
+      color: var(--silkscreen);
+      border-radius: 2px;
+    }
+
+    footer {
+      margin-top: 32px;
+      font-size: 0.7rem;
+      color: var(--silkscreen);
+      text-align: center;
+      border-top: 1px solid var(--panel-edge);
+      padding-top: 16px;
+    }
+
+    footer a { color: var(--copper); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 580px) {
+      .specs-strip { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .spec-cell { border-right: none; }
+      .work-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-<header>
-  <h1>zallkyre</h1>
-  <p>hardware + software. from PCB to production.</p>
-</header>
-<main>
 
-  <section>
-    <h2>live right now</h2>
-    <a class="card" href="https://txtwall.xyz">
-      <div>
-        <div class="name">txtwall.xyz</div>
-        <div class="desc">encrypted anonymous text wall — client-side AES-GCM, zero accounts</div>
-      </div>
-      <span class="tag green">live</span>
-    </a>
-    <a class="card" href="https://github.com/zallkyre/AI-Chatbot">
-      <div>
-        <div class="name">AI-Chatbot</div>
-        <div class="desc">groq-powered discord bot, 24/7 on a pi 3, per-user memory</div>
-      </div>
-      <span class="tag green">live</span>
-    </a>
-    <a class="card" href="https://github.com/zallkyre/optimizer">
-      <div>
-        <div class="name">optimizer</div>
-        <div class="desc">honest windows maintenance tool — no fake features, no myths</div>
-      </div>
-      <span class="tag green">live</span>
-    </a>
-  </section>
+<div class="board">
+  <div class="screw tl"></div>
+  <div class="screw tr"></div>
+  <div class="screw bl"></div>
+  <div class="screw br"></div>
 
-  <section>
-    <h2>projects</h2>
-    <a class="card" href="https://github.com/zallkyre/volos">
-      <div>
-        <div class="name">volos</div>
-        <div class="desc">open-source stream deck — hot-swap kailh keys, snap-on modules, web serial flashing, $25 vs elgato $150</div>
-      </div>
-      <span class="tag gray">repo</span>
-    </a>
-    <a class="card" href="https://github.com/zallkyre/txtwall">
-      <div>
-        <div class="name">txtwall</div>
-        <div class="desc">encrypted anonymous text wall. fastapi + sqlite. live at txtwall.xyz</div>
-      </div>
-      <span class="tag gray">repo</span>
-    </a>
-    <a class="card" href="https://github.com/zallkyre/AI-Chatbot">
-      <div>
-        <div class="name">AI-Chatbot</div>
-        <div class="desc">lightweight open-source discord bot with AI memory</div>
-      </div>
-      <span class="tag gray">repo</span>
-    </a>
-    <a class="card" href="https://github.com/zallkyre/optimizer">
-      <div>
-        <div class="name">optimizer</div>
-        <div class="desc">open-source windows optimizer in pure powershell</div>
-      </div>
-      <span class="tag gray">repo</span>
-    </a>
-    <a class="card" href="https://github.com/zallkyre/zalks-stats">
-      <div>
-        <div class="name">zalks-stats</div>
-        <div class="desc">minecraft mod — player stats</div>
-      </div>
-      <span class="tag gray">repo</span>
-    </a>
-    <a class="card" href="https://github.com/zallkyre/zallkyre.github.io">
-      <div>
-        <div class="name">zallkyre.github.io</div>
-        <div class="desc">this site</div>
-      </div>
-      <span class="tag gray">repo</span>
-    </a>
-  </section>
-
-  <section>
-    <h2>hardware</h2>
-    <div class="card">
-      <div>
-        <div class="name">volos</div>
-        <div class="desc">open-source stream deck / macropad — esp32-s3, kailh hot-swap keys, snap-on modules, web serial flashing</div>
-      </div>
+  <div class="silk-head">
+    <div class="silk-brand">
+      <h1>VOLOS // 4x3</h1>
+      <p class="tagline">one developer · big dreams · low budget</p>
+      <p style="font-size: 0.72rem; color: var(--silkscreen); margin-top: 4px;">RP2040 modular stream pad · direct USB HID</p>
     </div>
-    <div class="card">
-      <div>
-        <div class="name">qr generator</div>
-        <div class="desc">dark-mode desktop QR app (customtkinter)</div>
-      </div>
+    <div class="silk-meta">
+      BOARD: <span>MAKING RN</span><br>
+      STATUS: <span class="status-badge">FABRICATING V1.2</span>
     </div>
-  </section>
+  </div>
 
-  <section>
-    <h2>stack</h2>
-    <div class="stack">
-      <span>python</span><span>fastapi</span><span>sqlite</span><span>powershell</span>
-      <span>c++</span><span>arduino</span><span>esp32</span><span>kicad</span>
-      <span>platformio</span><span>groq</span><span>discord.py</span><span>raspberry pi</span>
-      <span>cloudflare</span>
+  <!-- SPECS STRIP: MULTIPLIERS ON TOP, ACTUAL SPECS UNDERNEATH -->
+  <div class="specs-strip">
+    <div class="spec-cell">
+      <div class="spec-multiplier">6.6×</div>
+      <div class="spec-actual">$22.60</div>
+      <div class="spec-desc">vs $149.99 stream deck</div>
     </div>
-  </section>
+    <div class="spec-cell">
+      <div class="spec-multiplier">10.8×</div>
+      <div class="spec-actual">$0.93 / key</div>
+      <div class="spec-desc">vs $10.00 / key deck</div>
+    </div>
+    <div class="spec-cell">
+      <div class="spec-multiplier">15–60×</div>
+      <div class="spec-actual">1 ms poll</div>
+      <div class="spec-desc">vs 15–60 ms touch apps</div>
+    </div>
+    <div class="spec-cell">
+      <div class="spec-multiplier">9–22×</div>
+      <div class="spec-actual">20–35 mA</div>
+      <div class="spec-desc">vs 300–450 mA deck draw</div>
+    </div>
+  </div>
 
-</main>
-<footer>
-  <a href="https://github.com/zallkyre">github.com/zallkyre</a>
-</footer>
+  <!-- BENCHMARK CHARTS -->
+  <div class="chart-unit">
+    <div class="chart-label">FINAL ASSEMBLED PRICE <span>[USD TOTAL]</span></div>
+    <div class="chart-box"><canvas id="c0"></canvas></div>
+  </div>
+
+  <div class="chart-unit">
+    <div class="chart-label">UNIT COST PER PHYSICAL KEY <span>[USD / KEY]</span></div>
+    <div class="chart-box" style="height: 180px;"><canvas id="c1"></canvas></div>
+  </div>
+
+  <div class="chart-unit">
+    <div class="chart-label">RAW COMPONENT BOM SPREAD <span>[LOW vs HIGH]</span></div>
+    <div class="chart-box"><canvas id="c2"></canvas></div>
+  </div>
+
+  <div class="chart-unit">
+    <div class="chart-label">TRIGGER LATENCY <span>[POLL INTERVAL MS]</span></div>
+    <div class="chart-box"><canvas id="c3"></canvas></div>
+  </div>
+
+  <div class="chart-unit">
+    <div class="chart-label">5V BUS DRAW <span>[mA CURRENT CONSUMPTION]</span></div>
+    <div class="chart-box"><canvas id="c4"></canvas></div>
+  </div>
+
+  <!-- ADJACENT PROJECTS -->
+  <div class="sub-section">
+    <div class="sub-title">// ADJACENT EXPERIMENTS & FIRMWARE</div>
+    <div class="work-grid">
+      <a class="item" href="https://txtwall.xyz" target="_blank" rel="noopener noreferrer">
+        <div class="item-name">txtwall.xyz ↗</div>
+        <div class="item-desc">client-side AES-GCM encrypted paste wall running on rpi. zero logs.</div>
+      </a>
+      <a class="item" href="https://github.com/zallkyre/AI-Chatbot" target="_blank" rel="noopener noreferrer">
+        <div class="item-name">groq-discord-bot ↗</div>
+        <div class="item-desc">lightweight discord bot with local sqlite context memory.</div>
+      </a>
+      <a class="item" href="https://github.com/zallkyre/optimizer" target="_blank" rel="noopener noreferrer">
+        <div class="item-name">optimizer ↗</div>
+        <div class="item-desc">raw powershell maintenance scripts. cleans telemetry & services.</div>
+      </a>
+      <a class="item" href="https://github.com/zallkyre/zalks-stats" target="_blank" rel="noopener noreferrer">
+        <div class="item-name">zalks-stats ↗</div>
+        <div class="item-desc">minecraft fabric telemetry mod tracking real-time server/client tps.</div>
+      </a>
+    </div>
+
+    <div class="chips">
+      <span class="chip">RP2040</span>
+      <span class="chip">QMK/VIAL</span>
+      <span class="chip">EASYEDA</span>
+      <span class="chip">C++</span>
+      <span class="chip">PYTHON</span>
+      <span class="chip">FASTAPI</span>
+      <span class="chip">SQLITE</span>
+      <span class="chip">POWERSHELL</span>
+    </div>
+  </div>
+
+  <footer>
+    <p>FABRICATED & MAINTAINED BY <a href="https://github.com/zallkyre" target="_blank" rel="noopener noreferrer">ZALLKYRE</a> · ALL REPOS OPEN SOURCE</p>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+  const ink = '#e1e3ec';
+  const muted = '#6f7387';
+  const G = '#10b981', S = '#64748b';
+  const GL = 'rgba(16, 185, 129, 0.35)', SL = 'rgba(100, 116, 139, 0.35)';
+
+  const labelPlugin = {
+    id: 'vl',
+    afterDatasetsDraw(ch, _, o) {
+      if (!o || !o.labels) return;
+      const c = ch.ctx;
+      c.save();
+      c.font = '600 11px monospace';
+      c.fillStyle = ink;
+      c.textAlign = 'center';
+      c.textBaseline = 'bottom';
+      o.labels.forEach((t, i) => {
+        const xs = [], ys = [];
+        ch.data.datasets.forEach((d, k) => {
+          const el = ch.getDatasetMeta(k).data[i];
+          if (el) { xs.push(el.x); ys.push(el.y); }
+        });
+        if (xs.length) {
+          c.fillText(t, xs.reduce((a, b) => a + b, 0) / xs.length, Math.min(...ys) - 5);
+        }
+      });
+      c.restore();
+    }
+  };
+
+  function mk(id, labels, sets, vl, y) {
+    new Chart(document.getElementById(id), {
+      type: 'bar',
+      plugins: [labelPlugin],
+      data: {
+        labels: labels,
+        datasets: sets.map(s => ({
+          data: s.d,
+          backgroundColor: s.c,
+          borderRadius: 2,
+          borderSkipped: 'bottom',
+          maxBarThickness: 42,
+          categoryPercentage: 0.95,
+          barPercentage: 1
+        }))
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 20 } },
+        plugins: { legend: { display: false }, vl: { labels: vl } },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: muted, font: { size: 10, family: 'monospace' } },
+            border: { color: '#232530' }
+          },
+          y: Object.assign({
+            beginAtZero: true,
+            grid: { color: '#161822' },
+            border: { display: false },
+            ticks: { color: muted, font: { size: 9, family: 'monospace' } }
+          }, y)
+        }
+      }
+    });
+  }
+
+  const usd = v => '$' + v;
+
+  mk('c0',
+    ['Volos', 'Adafruit', 'Freedeck', 'DuckyPad', 'Stream Deck'],
+    [{ d: [22.6, 55, 75, 85, 149.99], c: [G, S, S, S, S] }],
+    ['$22.60', '$55', '$75', '$85', '$149.99'],
+    { ticks: { color: muted, callback: usd } });
+
+  mk('c1',
+    ['Volos', 'DuckyPad', 'Freedeck', 'Stream Deck'],
+    [{ d: [0.93, 3, 6.5, 10], c: [G, S, S, S] }],
+    ['$0.93', '$3.00', '$6.50', '$10.00'],
+    { ticks: { color: muted, callback: usd } });
+
+  mk('c2',
+    ['Volos', 'Adafruit', 'DuckyPad', 'Freedeck'],
+    [{ d: [11, 35, 38, 48], c: [GL, SL, SL, SL] }, { d: [23, 45, 55, 75], c: [G, S, S, S] }],
+    ['$11\u2013$23', '$35\u2013$45', '$38\u2013$55', '$48\u2013$75'],
+    { ticks: { color: muted, callback: usd } });
+
+  mk('c3',
+    ['Volos (HID)', 'Stream-Pi (min)', 'Stream-Pi (max)'],
+    [{ d: [1, 15, 60], c: [G, SL, S] }],
+    ['1 ms', '15 ms', '60 ms'],
+    { max: 70, ticks: { color: muted, callback: v => v + ' ms' } });
+
+  mk('c4',
+    ['Volos (idle)', 'Stream Deck (15 LCD)'],
+    [{ d: [20, 300], c: [GL, SL] }, { d: [35, 450], c: [G, S] }],
+    ['20\u201335 mA', '300\u2013450 mA'],
+    { ticks: { color: muted, callback: v => v + ' mA' } });
+</script>
 </body>
 </html>
