@@ -76,7 +76,7 @@ let speed = 16;
 const pos = { x: -282, y: 80, z: 500 };
 camera.rotation.order = "YXZ";
 
-fetch("spawn3d.json?v=3").then(r=>r.json()).then(data=>{
+fetch("spawn3d.json?v=4").then(r=>r.json()).then(data=>{
   const b = data.blocks;
   const geo = new THREE.BoxGeometry(1,1,1);
   const mat = new THREE.MeshLambertMaterial();
@@ -93,12 +93,15 @@ fetch("spawn3d.json?v=3").then(r=>r.json()).then(data=>{
   mesh.instanceMatrix.needsUpdate = true;
   if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   scene.add(mesh);
-  document.getElementById("info").textContent = b.length + " blocks · click to enter";
-  // aim at the middle of the build
-  let sx=0, sz=0; for (const bl of b){ sx+=bl[0]; sz+=bl[1]; }
-  const cx = sx/b.length, cz = sz/b.length;
-  pos.x = cx; pos.z = cz + 120; pos.y = 78;   // look toward the build (-Z)
-  yaw = 0; pitch = -0.22;
+  document.getElementById("info").textContent = b.length + " blocks · click to enter · WASD to fly";
+  // start on a 3/4 view looking at the middle of the build
+  let sx=0, sz=0, sy=0; for (const bl of b){ sx+=bl[0]; sz+=bl[1]; sy+=bl[2]; }
+  const cx = sx/b.length, cz = sz/b.length, cy = sy/b.length;
+  pos.x = cx + 95; pos.y = cy + 26; pos.z = cz + 95;
+  const tgt = new THREE.Vector3(cx, cy, cz);
+  const dvec = tgt.clone().sub(new THREE.Vector3(pos.x, pos.y, pos.z)).normalize();
+  yaw = Math.atan2(-dvec.x, -dvec.z);
+  pitch = Math.asin(dvec.y);
 }).catch(e=>{ document.getElementById("info").textContent = "load failed: " + e; });
 
 // ---- controls ----
