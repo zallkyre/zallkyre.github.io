@@ -70,7 +70,7 @@ fetch("spawn3d.json").then(r=>r.json()).then(data=>{
   const minY=Math.min(...b.map(x=>x[2+0]) );
   const ox=(minX+maxX)/2, oz=(minZ+maxZ)/2;
   const geo = new THREE.BoxGeometry(1,1,1);
-  const mat = new THREE.MeshLambertMaterial({ vertexColors:true });
+  const mat = new THREE.MeshLambertMaterial();
   const mesh = new THREE.InstancedMesh(geo, mat, b.length);
   const dummy = new THREE.Object3D();
   const col = new THREE.Color();
