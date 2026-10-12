@@ -6,34 +6,42 @@
 <title>spawn // 3D</title>
 <style>
   html,body{margin:0;height:100%;background:#0b0c10;overflow:hidden;font:12px ui-monospace,monospace;color:#e1e3ec}
-  #hud{position:fixed;left:10px;top:10px;z-index:10;background:rgba(19,20,26,.75);border:1px solid #232530;border-radius:6px;padding:8px 10px}
-  #hud b{color:#10b981}
-  #hud .m{color:#9499ad}
-  a{color:#c77d46}
+  #hud{position:fixed;left:10px;top:10px;z-index:10;background:rgba(19,20,26,.8);border:1px solid #232530;border-radius:6px;padding:8px 10px}
+  #hud b{color:#10b981} #hud .m{color:#9499ad}
+  #cross{position:fixed;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;pointer-events:none;z-index:9}
+  #cross:before,#cross:after{content:"";position:absolute;background:rgba(255,255,255,.7)}
+  #cross:before{left:6px;top:0;width:2px;height:14px} #cross:after{top:6px;left:0;height:2px;width:14px}
+  #start{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(11,12,16,.75);z-index:20;cursor:pointer}
+  #start div{background:#13141a;border:1px solid #232530;border-radius:8px;padding:18px 22px;text-align:center}
+  #start b{color:#10b981;font-size:15px}
 </style>
 </head>
 <body>
 <div id="hud">
   <div><b>mainoneworld · spawn</b></div>
-  <div class="m">drag = rotate · scroll = zoom</div>
+  <div class="m">WASD = move · mouse = look · space/shift = up/down</div>
+  <div class="m">scroll = speed · click to lock mouse · esc to release</div>
   <div class="m" id="info">loading…</div>
 </div>
+<div id="cross"></div>
+<div id="start"><div><b>click to enter</b><br><span class="m">WASD to fly around spawn</span></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const COLORS = {
   "minecraft:grass_block":"#6aa84f","minecraft:dirt":"#8b5a2b","minecraft:coarse_dirt":"#7a4f26",
-  "minecraft:stone":"#8a8a8a","minecraft:cobblestone":"#7c7c7c","minecraft:stone_bricks":"#9a9a9a",
-  "minecraft:mossy_cobblestone":"#6f7d63","minecraft:oak_log":"#6b4f2a","minecraft:oak_planks":"#b8945f",
-  "minecraft:oak_leaves":"#3f7a2f","minecraft:birch_leaves":"#6fae4a","minecraft:birch_log":"#d8d2c2",
-  "minecraft:water":"#2f6fd0","minecraft:sand":"#e0d59a","minecraft:gravel":"#9a9a9a",
-  "minecraft:leaf_litter":"#7a5a2a","minecraft:short_grass":"#5aa02f","minecraft:tall_grass":"#5aa02f",
-  "minecraft:diorite":"#bdbdbd","minecraft:andesite":"#8f8f8f","minecraft:granite":"#9d6b5a",
+  "minecraft:rooted_dirt":"#8a6a3a","minecraft:stone":"#8a8a8a","minecraft:cobblestone":"#7c7c7c",
+  "minecraft:stone_bricks":"#9a9a9a","minecraft:mossy_cobblestone":"#6f7d63","minecraft:oak_log":"#6b4f2a",
+  "minecraft:oak_planks":"#b8945f","minecraft:oak_leaves":"#3f7a2f","minecraft:birch_leaves":"#6fae4a",
+  "minecraft:birch_log":"#d8d2c2","minecraft:water":"#2f6fd0","minecraft:sand":"#e0d59a",
+  "minecraft:gravel":"#9a9a9a","minecraft:leaf_litter":"#7d5a2c","minecraft:short_grass":"#5aa02f",
+  "minecraft:tall_grass":"#5aa02f","minecraft:diorite":"#bdbdbd","minecraft:andesite":"#8f8f8f",
+  "minecraft:granite":"#9d6b5a","minecraft:deepslate":"#4c4c50","minecraft:tuff":"#6d6d63",
   "minecraft:snow_block":"#f2f6f8","minecraft:glass":"#cfe8ef","minecraft:lantern":"#ffcf6b",
-  "minecraft:torch":"#ffcf6b","minecraft:rail":"#a9a9a9","minecraft:iron_block":"#d8d8d8",
-  "minecraft:oak_fence":"#b8945f","minecraft:oak_stairs":"#b8945f","minecraft:oak_slab":"#b8945f",
-  "minecraft:moss_block":"#5b8a3c","minecraft:podzol":"#6b4a25","minecraft:spruce_log":"#4a3520",
-  "minecraft:spruce_planks":"#7a5c33","minecraft:spruce_leaves":"#33562a","minecraft:bricks":"#9c5a45",
-  "minecraft:deepslate":"#4c4c50","minecraft:clay":"#a4a8b8"
+  "minecraft:torch":"#ffcf6b","minecraft:iron_block":"#d8d8d8","minecraft:oak_fence":"#b8945f",
+  "minecraft:oak_stairs":"#b8945f","minecraft:oak_slab":"#b8945f","minecraft:moss_block":"#5b8a3c",
+  "minecraft:spruce_log":"#4a3520","minecraft:spruce_planks":"#7a5c33","minecraft:spruce_leaves":"#33562a",
+  "minecraft:bricks":"#9c5a45","minecraft:clay":"#a4a8b8","minecraft:podzol":"#6b4a25",
+  "minecraft:polished_andesite":"#9a9a9a","minecraft:smooth_stone":"#a0a0a0","minecraft:white_wool":"#eeeeee"
 };
 function colorFor(n){
   if (COLORS[n]) return COLORS[n];
@@ -41,11 +49,13 @@ function colorFor(n){
   if (n.includes("leaves")) return "#3f7a2f";
   if (n.includes("log")||n.includes("wood")) return "#6b4f2a";
   if (n.includes("planks")||n.includes("fence")||n.includes("stairs")||n.includes("slab")) return "#b8945f";
-  if (n.includes("stone")||n.includes("deepslate")) return "#8a8a8a";
-  if (n.includes("grass")) return "#5aa02f";
+  if (n.includes("stone")||n.includes("deepslate")||n.includes("andesite")||n.includes("cobble")) return "#8a8a8a";
+  if (n.includes("grass")||n.includes("moss")) return "#5aa02f";
+  if (n.includes("litter")) return "#7d5a2c";
   if (n.includes("glass")||n.includes("lantern")||n.includes("torch")||n.includes("light")) return "#ffcf6b";
   if (n.includes("brick")) return "#9c5a45";
   if (n.includes("sand")) return "#e0d59a";
+  if (n.includes("wool")) return "#dddddd";
   return "#8a8a8a";
 }
 
@@ -55,20 +65,19 @@ renderer.setClearColor(0x0b0c10);
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.1, 5000);
-scene.add(new THREE.AmbientLight(0xffffff, 0.85));
-const dl = new THREE.DirectionalLight(0xffffff, 0.7); dl.position.set(1,2,1); scene.add(dl);
+const camera = new THREE.PerspectiveCamera(70, innerWidth/innerHeight, 0.05, 5000);
+scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+const dl = new THREE.DirectionalLight(0xffffff, 0.55); dl.position.set(100, 200, 80); scene.add(dl);
+const dl2 = new THREE.DirectionalLight(0xffffff, 0.35); dl2.position.set(-100, 80, -120); scene.add(dl2);
 
-let target = new THREE.Vector3(0,0,0);
-let dist = 190, theta = 0.9, phi = 0.9;
+// fly camera state (game-style)
+let yaw = 0, pitch = -0.2;
+let speed = 16;
+const pos = { x: -282, y: 80, z: 500 };
+camera.rotation.order = "YXZ";
 
 fetch("spawn3d.json").then(r=>r.json()).then(data=>{
   const b = data.blocks;
-  const [cx, cz] = [0,0];
-  const minX=Math.min(...b.map(x=>x[0])), maxX=Math.max(...b.map(x=>x[0]));
-  const minZ=Math.min(...b.map(x=>x[2])), maxZ=Math.max(...b.map(x=>x[2]));
-  const minY=Math.min(...b.map(x=>x[2+0]) );
-  const ox=(minX+maxX)/2, oz=(minZ+maxZ)/2;
   const geo = new THREE.BoxGeometry(1,1,1);
   const mat = new THREE.MeshLambertMaterial();
   const mesh = new THREE.InstancedMesh(geo, mat, b.length);
@@ -76,7 +85,7 @@ fetch("spawn3d.json").then(r=>r.json()).then(data=>{
   const col = new THREE.Color();
   for (let i=0;i<b.length;i++){
     const x=b[i][0], z=b[i][1], y=b[i][2], name=b[i][3];
-    dummy.position.set(x-ox, y-((53+86)/2), z-oz);
+    dummy.position.set(x + 0.5, y + 0.5, z + 0.5);
     dummy.updateMatrix();
     mesh.setMatrixAt(i, dummy.matrix);
     mesh.setColorAt(i, col.set(colorFor(name)));
@@ -84,27 +93,57 @@ fetch("spawn3d.json").then(r=>r.json()).then(data=>{
   mesh.instanceMatrix.needsUpdate = true;
   if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   scene.add(mesh);
-  target.set(0,0,0);
-  document.getElementById("info").textContent = b.length + " blocks · drag to rotate";
-}).catch(e=>{
-  document.getElementById("info").textContent = "failed to load spawn3d.json: " + e;
+  document.getElementById("info").textContent = b.length + " blocks · click to enter";
+  // aim at the middle of the build
+  let sx=0, sz=0; for (const bl of b){ sx+=bl[0]; sz+=bl[1]; }
+  const cx = sx/b.length, cz = sz/b.length;
+  pos.x = cx; pos.z = cz + 120; pos.y = 78;   // look toward the build (-Z)
+  yaw = 0; pitch = -0.22;
+}).catch(e=>{ document.getElementById("info").textContent = "load failed: " + e; });
+
+// ---- controls ----
+const keys = {};
+addEventListener("keydown", e=>{ keys[e.code]=true; if(e.code==="Space") e.preventDefault(); });
+addEventListener("keyup", e=>{ keys[e.code]=false; });
+
+const startEl = document.getElementById("start");
+startEl.addEventListener("click", ()=> renderer.domElement.requestPointerLock());
+renderer.domElement.addEventListener("click", ()=> renderer.domElement.requestPointerLock());
+document.addEventListener("pointerlockchange", ()=>{
+  const locked = document.pointerLockElement === renderer.domElement;
+  startEl.style.display = locked ? "none" : "flex";
 });
+document.addEventListener("mousemove", e=>{
+  if (document.pointerLockElement !== renderer.domElement) return;
+  yaw   -= e.movementX * 0.0025;
+  pitch -= e.movementY * 0.0025;
+  pitch = Math.max(-Math.PI/2+0.01, Math.min(Math.PI/2-0.01, pitch));
+});
+addEventListener("wheel", e=>{ speed = Math.max(2, Math.min(120, speed - e.deltaY*0.02)); }, {passive:true});
+addEventListener("resize", ()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
 
-function update(){
-  const x = target.x + dist*Math.sin(phi)*Math.cos(theta);
-  const y = target.y + dist*Math.cos(phi);
-  const z = target.z + dist*Math.sin(phi)*Math.sin(theta);
-  camera.position.set(x,y,z);
-  camera.lookAt(target);
+const clock = new THREE.Clock();
+function loop(){
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.05, clock.getDelta());
+  const sp = speed;
+
+  camera.rotation.set(pitch, yaw, 0);
+  const fwd = new THREE.Vector3(0, 0, -1).applyEuler(camera.rotation);
+  const right = new THREE.Vector3(1, 0, 0).applyEuler(camera.rotation);
+  right.y = 0; right.normalize();
+
+  if (keys["KeyW"]) { pos.x += fwd.x*sp*dt; pos.y += fwd.y*sp*dt; pos.z += fwd.z*sp*dt; }
+  if (keys["KeyS"]) { pos.x -= fwd.x*sp*dt; pos.y -= fwd.y*sp*dt; pos.z -= fwd.z*sp*dt; }
+  if (keys["KeyA"]) { pos.x -= right.x*sp*dt; pos.z -= right.z*sp*dt; }
+  if (keys["KeyD"]) { pos.x += right.x*sp*dt; pos.z += right.z*sp*dt; }
+  if (keys["Space"]) pos.y += sp*dt;
+  if (keys["ShiftLeft"]) pos.y -= sp*dt;
+
+  camera.position.set(pos.x, pos.y, pos.z);
+  renderer.render(scene, camera);
 }
-let drag=false, lx=0, ly=0;
-renderer.domElement.addEventListener("mousedown",e=>{drag=true;lx=e.clientX;ly=e.clientY;});
-addEventListener("mouseup",()=>drag=false);
-addEventListener("mousemove",e=>{ if(!drag)return; theta -= (e.clientX-lx)*0.01; phi -= (e.clientY-ly)*0.01; phi=Math.max(0.15,Math.min(1.5,phi)); lx=e.clientX; ly=e.clientY; });
-addEventListener("wheel",e=>{ dist = Math.max(40, Math.min(600, dist + e.deltaY*0.2)); },{passive:true});
-addEventListener("resize",()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
-
-(function loop(){ requestAnimationFrame(loop); update(); renderer.render(scene,camera); })();
+loop();
 </script>
 </body>
 </html>
