@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>mainoneworld</title>
+<meta name="theme-color" content="#0c0d10">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230c0d10'/%3E%3Crect x='7.5' y='7.5' width='17' height='17' rx='3' fill='none' stroke='%2310b981' stroke-width='3'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --pcb-bg:#0c0d10; --dot:#1b1c24; --panel:#13141a; --edge:#232530;
+    --silk:#9499ad; --copper:#c77d46; --green:#10b981; --text:#e1e3ec; --red:#f0654a;
+    --mono: ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    background-color:var(--pcb-bg);
+    background-image:radial-gradient(var(--dot) 1.2px, transparent 1.2px);
+    background-size:18px 18px; color:var(--text); font-family:var(--mono);
+    line-height:1.45; padding:env(safe-area-inset-top) 14px calc(84px + env(safe-area-inset-bottom));
+    max-width:560px; margin:0 auto; min-height:100vh;
+  }
+  header{padding:18px 2px 12px}
+  h1{font-size:1.25rem;letter-spacing:.04em;color:#fff}
+  .tag{font-size:.7rem;color:var(--copper);margin-top:2px}
+  .panel{background:var(--panel);border:1px solid var(--edge);border-radius:6px;padding:14px 14px;margin-bottom:12px;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .muted{color:var(--silk);font-size:.72rem}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px}
+  .dot.on{background:var(--green);box-shadow:0 0 8px var(--green)}
+  .dot.off{background:var(--red);box-shadow:0 0 8px var(--red)}
+  .big{font-size:1.7rem;font-weight:700;color:#fff}
+  .stat{font-size:.72rem;color:var(--silk);text-transform:uppercase;letter-spacing:.08em}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .chip{background:#090a0d;border:1px solid #1f212b;padding:3px 8px;font-size:.7rem;color:var(--silk);border-radius:3px}
+  .btn{display:block;text-align:center;background:#0f1015;border:1px solid var(--edge);color:var(--text);padding:11px;border-radius:5px;font-family:var(--mono);font-size:.82rem;text-decoration:none;cursor:pointer;transition:border-color .1s}
+  .btn:active{border-color:var(--copper)}
+  .btn.pri{border-color:var(--green);color:#fff;background:#0d1a16}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .card{background:#0f1015;border:1px solid var(--edge);border-radius:6px;padding:12px;text-decoration:none;color:inherit;display:block}
+  .card:active{border-color:var(--copper)}
+  .card .n{font-size:.86rem;font-weight:600;color:#fff}
+  .card .d{font-size:.68rem;color:var(--silk);margin-top:3px}
+  .log{font-size:.74rem;color:var(--text);padding:8px 0;border-bottom:1px dashed var(--edge)}
+  .log:last-child{border-bottom:none}
+  .log .t{color:var(--copper);font-size:.66rem}
+  nav{position:fixed;left:0;right:0;bottom:0;background:rgba(12,13,16,.96);border-top:1px solid var(--edge);display:flex;backdrop-filter:blur(8px);padding-bottom:env(safe-area-inset-bottom)}
+  nav button{flex:1;background:none;border:none;color:var(--silk);font-family:var(--mono);font-size:.72rem;padding:14px 4px;cursor:pointer;border-top:2px solid transparent}
+  nav button.active{color:#fff;border-top-color:var(--green)}
+  .tab{display:none}.tab.active{display:block}
+  .loading{opacity:.6}
+  footer{text-align:center;color:var(--silk);font-size:.64rem;padding:14px 0 4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>mainoneworld</h1>
+  <p class="tag">one developer · big dreams · low budget</p>
+</header>
+
+<section class="tab active" id="tab-server">
+  <div class="panel" id="statusCard">
+    <div class="row">
+      <div>
+        <div class="stat">Server status</div>
+        <div id="onlineLine"><span class="dot off"></span><span id="onlineTxt">checking…</span></div>
+      </div>
+      <button class="btn" style="width:auto;padding:8px 12px" onclick="loadStatus()">↻</button>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <div><div class="big" id="pcount">–</div><div class="stat">players online</div></div>
+      <div style="text-align:right"><div class="stat" id="ver" style="max-width:160px">–</div><div class="stat">version</div></div>
+    </div>
+    <div class="chips" id="players"></div>
+  </div>
+
+  <a class="btn pri" id="copyBtn" onclick="copyIP()">Copy IP · mc.txtwall.xyz</a>
+  <div style="height:10px"></div>
+  <div class="grid">
+    <a class="btn" id="voteBtn" href="#" target="_blank" rel="noopener">🗳️ Vote (+200)</a>
+    <a class="btn" href="https://discord.com/invite/2eUSaHDq" target="_blank" rel="noopener">💬 Discord</a>
+  </div>
+</section>
+
+<section class="tab" id="tab-sites">
+  <div class="grid">
+    <a class="card" href="https://txtwall.xyz" target="_blank" rel="noopener"><div class="n">txtwall.xyz</div><div class="d">Main site</div></a>
+    <a class="card" href="https://zallkyre.github.io" target="_blank" rel="noopener"><div class="n">github.io</div><div class="d">Portfolio</div></a>
+    <a class="card" href="https://minecraft-mp.com/server/365206/" target="_blank" rel="noopener"><div class="n">Minecraft-MP</div><div class="d">Server listing</div></a>
+    <a class="card" href="https://minecraft-mp.com/server/365206/vote/" target="_blank" rel="noopener"><div class="n">Vote</div><div class="d">+200 coins / vote</div></a>
+    <a class="card" href="https://disboard.org/server/1555251868945617078" target="_blank" rel="noopener"><div class="n">Disboard</div><div class="d">Discord listing</div></a>
+    <a class="card" href="https://github.com/zallkyre" target="_blank" rel="noopener"><div class="n">GitHub</div><div class="d">All repos</div></a>
+  </div>
+</section>
+
+<section class="tab" id="tab-progress">
+  <div class="panel">
+    <div class="stat" style="margin-bottom:6px">OpenWork progress</div>
+    <div id="logList"></div>
+  </div>
+</section>
+
+<nav>
+  <button class="active" data-tab="server" onclick="show('server')">🎮 Server</button>
+  <button data-tab="sites" onclick="show('sites')">🌐 Sites</button>
+  <button data-tab="progress" onclick="show('progress')">⚙️ Progress</button>
+</nav>
+
+<footer>FABRICATED &amp; MAINTAINED BY ZALLKYRE</footer>
+
+<script>
+const HOST = "mc.txtwall.xyz";
+const VOTE = "https://minecraft-mp.com/server/365206/vote/";
+document.getElementById("voteBtn").href = VOTE;
+
+const PROGRESS = [
+  ["Discord bot", "mcbot on the Pi: /help /bal /baltop /online /ip /ping /vote"],
+  ["Vote rewards", "200 coins per vote via Minecraft-MP API, auto-paid"],
+  ["Clip bounty", "#clips — owner's ✅ pays the poster"],
+  ["Economy tools", "/baltop ranks all players (offline incl.), excludes zallkyre"],
+  ["Voice chat", "Fixed — playit UDP tunnel wired into voice_host"],
+  ["Watchdog", "auto-restarts paper / cloudflared / playit every 5 min"],
+  ["Backups", "nightly world backup at 04:00 + Discord notify"],
+  ["Playit tripwire", "alerts Discord if the tunnel address changes"],
+  ["Website", "VOLOS + €5 TAG tabs live at txtwall.xyz"],
+  ["Docs", "AI AGENTS READ THIS written on the server"],
+];
+
+function show(name){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active", t.id==="tab-"+name));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active", b.dataset.tab===name));
+  if(name==="server") loadStatus();
+}
+
+function renderLog(){
+  document.getElementById("logList").innerHTML = PROGRESS
+    .map(([t,d])=>`<div class="log"><div class="t">${t}</div>${d}</div>`).join("");
+}
+renderLog();
+
+async function loadStatus(){
+  const card = document.getElementById("statusCard");
+  card.classList.add("loading");
+  try{
+    const r = await fetch("https://api.mcstatus.io/v2/status/java/" + HOST + "?timeout=6");
+    const j = await r.json();
+    const on = j.online;
+    document.getElementById("onlineLine").innerHTML =
+      `<span class="dot ${on?'on':'off'}"></span><span id="onlineTxt">${on?'Online':'Offline'}</span>`;
+    if(on){
+      document.getElementById("pcount").textContent = (j.players?.online ?? 0) + "/" + (j.players?.max ?? 0);
+      document.getElementById("ver").textContent = j.version?.name_clean || "1.21.x";
+      const list = j.players?.list || [];
+      document.getElementById("players").innerHTML = list.length
+        ? list.map(p=>`<span class="chip">${p.name_clean || p.name_raw}</span>`).join("")
+        : '<span class="chip">nobody online — be the first</span>';
+    }else{
+      document.getElementById("pcount").textContent = "off";
+      document.getElementById("ver").textContent = "offline";
+      document.getElementById("players").innerHTML = '<span class="chip">server offline</span>';
+    }
+    document.getElementById("statusCard").querySelector(".stat:nth-child").textContent;
+    document.querySelector(".stat").textContent = "Server status · " + new Date().toLocaleTimeString();
+  }catch(e){
+    document.getElementById("onlineLine").innerHTML = `<span class="dot off"></span><span>status unavailable</span>`;
+  }
+  card.classList.remove("loading");
+}
+
+function copyIP(){
+  navigator.clipboard?.writeText(HOST);
+  const b = document.getElementById("copyBtn");
+  b.textContent = "Copied! → " + HOST;
+  setTimeout(()=>b.textContent = "Copy IP · mc.txtwall.xyz", 1500);
+}
+
+loadStatus();
+setInterval(()=>{ if(document.getElementById("tab-server").classList.contains("active")) loadStatus(); }, 30000);
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>

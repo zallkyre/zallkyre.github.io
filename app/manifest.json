@@ -1,0 +1,25 @@
+{
+  "name": "mainoneworld",
+  "short_name": "mainoneworld",
+  "description": "Live status, links and progress for the mainoneworld Minecraft server.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0d10",
+  "theme_color": "#0c0d10",
+  "icons": [
+    {
+      "src": "https://cdn.discordapp.com/icons/1555251868945617078/81096b4099e3bcf910a5849f572c26e3.jpg?size=192",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn.discordapp.com/icons/1555251868945617078/81096b4099e3bcf910a5849f572c26e3.jpg?size=512",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
