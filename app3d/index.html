@@ -76,7 +76,7 @@ let speed = 16;
 const pos = { x: -282, y: 80, z: 500 };
 camera.rotation.order = "YXZ";
 
-fetch("spawn3d.json").then(r=>r.json()).then(data=>{
+fetch("spawn3d.json?v=3").then(r=>r.json()).then(data=>{
   const b = data.blocks;
   const geo = new THREE.BoxGeometry(1,1,1);
   const mat = new THREE.MeshLambertMaterial();
