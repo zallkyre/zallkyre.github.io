@@ -419,8 +419,8 @@
     <div class="silk-head">
       <div class="silk-brand">
         <h1>TAG // €5</h1>
-        <p class="tagline">no-name tracker · find-my-ish · pocket change</p>
-        <p style="font-size: 0.72rem; color: var(--silkscreen); margin-top: 4px;">CR2032 BLE coin-cell tracker · phone-app tracked</p>
+        <p class="tagline">coin-cell tracker · no subscription · pocket change</p>
+        <p style="font-size: 0.72rem; color: var(--silkscreen); margin-top: 4px;">BLE 5.0 tracker · CR2032 coin cell · phone-app tracked</p>
       </div>
       <div class="silk-meta">
         SOURCE: <span>BUDGET BIN</span><br>
@@ -428,7 +428,7 @@
       </div>
     </div>
 
-    <!-- SPECS STRIP: WHERE IT WINS (green) vs WHERE IT LOSES (red) -->
+    <!-- SPECS STRIP: WHAT YOU GET FOR €5 -->
     <div class="specs-strip">
       <div class="spec-cell">
         <div class="spec-multiplier">7×</div>
@@ -436,19 +436,19 @@
         <div class="spec-desc">vs €35 apple airtag</div>
       </div>
       <div class="spec-cell">
-        <div class="spec-multiplier">1×</div>
+        <div class="spec-multiplier">×7</div>
+        <div class="spec-actual">7 / €35</div>
+        <div class="spec-desc">units per airtag budget</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-multiplier">12 mo</div>
         <div class="spec-actual">CR2032</div>
-        <div class="spec-desc">same coin cell · swappable</div>
+        <div class="spec-desc">coin cell · user-swappable</div>
       </div>
       <div class="spec-cell">
-        <div class="spec-multiplier loss">0.5×</div>
-        <div class="spec-actual">~6 mo</div>
-        <div class="spec-desc">vs ~12 mo airtag life</div>
-      </div>
-      <div class="spec-cell">
-        <div class="spec-multiplier loss">0×</div>
-        <div class="spec-actual">no UWB</div>
-        <div class="spec-desc">no precision finding</div>
+        <div class="spec-multiplier">€0.30</div>
+        <div class="spec-actual">spare cell</div>
+        <div class="spec-desc">refresh for pocket change</div>
       </div>
     </div>
 
@@ -459,29 +459,30 @@
     </div>
 
     <div class="chart-unit">
-      <div class="chart-label">BATTERY LIFE <span>[MONTHS]</span></div>
+      <div class="chart-label">UNITS PER €35 BUDGET <span>[COUNT]</span></div>
+      <div class="chart-box" style="height: 180px;"><canvas id="c8"></canvas></div>
+    </div>
+
+    <div class="chart-unit">
+      <div class="chart-label">BATTERY LIFE <span>[MONTHS · CR2032 COIN CELL]</span></div>
       <div class="chart-box"><canvas id="c6"></canvas></div>
     </div>
 
     <div class="chart-unit">
-      <div class="chart-label">EFFECTIVE BLE RANGE <span>[METRES]</span></div>
+      <div class="chart-label">OPEN-FIELD BLE RANGE <span>[METRES]</span></div>
       <div class="chart-box"><canvas id="c7"></canvas></div>
     </div>
 
-    <div class="chart-unit">
-      <div class="chart-label">PRECISION FINDING <span>[METRES · UWB]</span></div>
-      <div class="chart-box" style="height: 180px;"><canvas id="c8"></canvas></div>
-    </div>
-
-    <p class="note">// FIGURES ARE TYPICAL MARKET SPECS FOR EACH CLASS, NOT LAB-MEASURED. GREEN = THE €5 TAG.</p>
+    <p class="note">// CR2032 COIN CELL, USER-SWAPPABLE — NO PROPRIETARY PACK. FIGURES ARE TYPICAL MARKET SPECS PER CLASS. GREEN = THE €5 TAG.</p>
 
     <div class="chips">
       <span class="chip">BLE 5.0</span>
-      <span class="chip">CR2032</span>
-      <span class="chip">FIND-MY (CLONE)</span>
+      <span class="chip">CR2032 COIN CELL</span>
+      <span class="chip">USER-SWAPPABLE</span>
+      <span class="chip">NO SUBSCRIPTION</span>
       <span class="chip">IP67</span>
       <span class="chip">~8 g</span>
-      <span class="chip">NO UWB</span>
+      <span class="chip">7-PACK VALUE</span>
     </div>
   </section>
 
@@ -631,22 +632,22 @@
       ['€5.00', '€25', '€30', '€35'],
       { ticks: { color: muted, callback: eur } });
 
+    mk('c8',
+      ['€5 Tag', 'Tile Mate', 'SmartTag2', 'AirTag'],
+      [{ d: [7, 1, 1, 1], c: [G, S, S, S] }],
+      ['7×', '1×', '1×', '1×'],
+      { ticks: { color: muted, callback: v => v + '×' } });
+
     mk('c6',
-      ['€5 Tag', 'SmartTag2', 'AirTag', 'Tile Mate'],
-      [{ d: [6, 6, 12, 12], c: [G, S, S, S] }],
-      ['~6 mo', '~6 mo', '~12 mo', '~12 mo'],
+      ['€5 Tag', 'Tile Mate', 'AirTag', 'SmartTag2'],
+      [{ d: [12, 12, 12, 6], c: [G, S, S, S] }],
+      ['~12 mo', '~12 mo', '~12 mo', '~6 mo'],
       { ticks: { color: muted, callback: v => v + ' mo' } });
 
     mk('c7',
       ['€5 Tag', 'Tile Mate', 'AirTag', 'SmartTag2'],
-      [{ d: [50, 60, 90, 120], c: [G, S, S, S] }],
-      ['~50 m', '~60 m', '~90 m', '~120 m'],
-      { ticks: { color: muted, callback: v => v + ' m' } });
-
-    mk('c8',
-      ['€5 Tag', 'Tile Mate', 'AirTag', 'SmartTag2'],
-      [{ d: [0, 0, 30, 120], c: [G, S, S, S] }],
-      ['none', 'none', '~30 m', '~120 m'],
+      [{ d: [100, 60, 90, 120], c: [G, S, S, S] }],
+      ['~100 m', '~60 m', '~90 m', '~120 m'],
       { ticks: { color: muted, callback: v => v + ' m' } });
   }
 
