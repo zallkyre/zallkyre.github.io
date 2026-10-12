@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>volos // rp2040 deck & bench</title>
-  <meta name="description" content="VOLOS - an RP2040 modular stream pad with direct USB HID, plus firmware and open-source experiments by zallkyre.">
+  <title>zallkyre // board & bench</title>
+  <meta name="description" content="VOLOS - an RP2040 modular stream pad with direct USB HID, and a €5 no-name tracker - compared against the name brands. Open-source experiments by zallkyre.">
   <link rel="canonical" href="https://txtwall.xyz/">
   <meta name="theme-color" content="#0c0d10">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="zallkyre">
-  <meta property="og:title" content="VOLOS // 4x3">
-  <meta property="og:description" content="RP2040 modular stream pad - direct USB HID. One developer, big dreams, low budget.">
+  <meta property="og:title" content="zallkyre // board & bench">
+  <meta property="og:description" content="VOLOS RP2040 stream pad + a €5 tracker teardown. One developer, big dreams, low budget.">
   <meta property="og:url" content="https://txtwall.xyz/">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="VOLOS // 4x3">
-  <meta name="twitter:description" content="RP2040 modular stream pad - direct USB HID.">
+  <meta name="twitter:title" content="zallkyre // board & bench">
+  <meta name="twitter:description" content="VOLOS RP2040 stream pad + a €5 tracker teardown.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230c0d10'/%3E%3Crect x='7.5' y='7.5' width='17' height='17' rx='3' fill='none' stroke='%2310b981' stroke-width='3'/%3E%3C/svg%3E">
   <style>
     :root {
@@ -25,6 +25,7 @@
       --silkscreen: #9499ad;
       --copper: #c77d46;
       --trace-green: #10b981;
+      --loss: #f0654a;
       --slate: #64748b;
       --text: #e1e3ec;
       --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
@@ -81,6 +82,40 @@
     .screw.tr { top: 10px; right: 10px; transform: rotate(78deg); }
     .screw.bl { bottom: 10px; left: 10px; transform: rotate(115deg); }
     .screw.br { bottom: 10px; right: 10px; transform: rotate(45deg); }
+
+    /* tab bar */
+    .tabbar {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--panel-edge);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.03em;
+      color: var(--silkscreen);
+      background: transparent;
+      border: 1px solid transparent;
+      border-bottom: 2px solid transparent;
+      padding: 9px 14px;
+      margin-bottom: -1px;
+      cursor: pointer;
+      border-radius: 3px 3px 0 0;
+      transition: color 0.1s ease, border-color 0.1s ease;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active {
+      color: #fff;
+      background: #0f1015;
+      border-color: var(--panel-edge);
+      border-bottom-color: var(--trace-green);
+    }
+    .tab .tag-price { color: var(--copper); }
+
+    .tab-panel[hidden] { display: none; }
 
     .silk-head {
       border-bottom: 1px dashed var(--panel-edge);
@@ -157,6 +192,7 @@
       color: var(--trace-green);
       line-height: 1.1;
     }
+    .spec-multiplier.loss { color: var(--loss); }
 
     .spec-actual {
       font-size: 0.72rem;
@@ -197,6 +233,13 @@
       height: 200px;
       position: relative;
       width: 100%;
+    }
+
+    .note {
+      font-size: 0.62rem;
+      color: var(--silkscreen);
+      margin-top: 4px;
+      line-height: 1.35;
     }
 
     /* adjacent projects */
@@ -290,69 +333,159 @@
   <div class="screw bl"></div>
   <div class="screw br"></div>
 
-  <div class="silk-head">
-    <div class="silk-brand">
-      <h1>VOLOS // 4x3</h1>
-      <p class="tagline">one developer · big dreams · low budget</p>
-      <p style="font-size: 0.72rem; color: var(--silkscreen); margin-top: 4px;">RP2040 modular stream pad · direct USB HID</p>
+  <div class="tabbar" role="tablist">
+    <button class="tab active" data-tab="volos" role="tab">VOLOS // 4x3</button>
+    <button class="tab" data-tab="tag" role="tab">TAG // €5 <span class="tag-price">FINDER</span></button>
+  </div>
+
+  <!-- ===================== TAB 1: VOLOS ===================== -->
+  <section id="panel-volos" class="tab-panel" data-panel="volos" role="tabpanel">
+    <div class="silk-head">
+      <div class="silk-brand">
+        <h1>VOLOS // 4x3</h1>
+        <p class="tagline">one developer · big dreams · low budget</p>
+        <p style="font-size: 0.72rem; color: var(--silkscreen); margin-top: 4px;">RP2040 modular stream pad · direct USB HID</p>
+      </div>
+      <div class="silk-meta">
+        BOARD: <span>MAKING RN</span><br>
+        STATUS: <span class="status-badge">FABRICATING V1.2</span>
+      </div>
     </div>
-    <div class="silk-meta">
-      BOARD: <span>MAKING RN</span><br>
-      STATUS: <span class="status-badge">FABRICATING V1.2</span>
+
+    <!-- SPECS STRIP: MULTIPLIERS ON TOP, ACTUAL SPECS UNDERNEATH -->
+    <div class="specs-strip">
+      <div class="spec-cell">
+        <div class="spec-multiplier">6.6×</div>
+        <div class="spec-actual">$22.60</div>
+        <div class="spec-desc">vs $149.99 stream deck</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-multiplier">10.8×</div>
+        <div class="spec-actual">$0.93 / key</div>
+        <div class="spec-desc">vs $10.00 / key deck</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-multiplier">15–60×</div>
+        <div class="spec-actual">1 ms poll</div>
+        <div class="spec-desc">vs 15–60 ms touch apps</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-multiplier">9–22×</div>
+        <div class="spec-actual">20–35 mA</div>
+        <div class="spec-desc">vs 300–450 mA deck draw</div>
+      </div>
     </div>
-  </div>
 
-  <!-- SPECS STRIP: MULTIPLIERS ON TOP, ACTUAL SPECS UNDERNEATH -->
-  <div class="specs-strip">
-    <div class="spec-cell">
-      <div class="spec-multiplier">6.6×</div>
-      <div class="spec-actual">$22.60</div>
-      <div class="spec-desc">vs $149.99 stream deck</div>
+    <!-- BENCHMARK CHARTS -->
+    <div class="chart-unit">
+      <div class="chart-label">FINAL ASSEMBLED PRICE <span>[USD TOTAL]</span></div>
+      <div class="chart-box"><canvas id="c0"></canvas></div>
     </div>
-    <div class="spec-cell">
-      <div class="spec-multiplier">10.8×</div>
-      <div class="spec-actual">$0.93 / key</div>
-      <div class="spec-desc">vs $10.00 / key deck</div>
+
+    <div class="chart-unit">
+      <div class="chart-label">UNIT COST PER PHYSICAL KEY <span>[USD / KEY]</span></div>
+      <div class="chart-box" style="height: 180px;"><canvas id="c1"></canvas></div>
     </div>
-    <div class="spec-cell">
-      <div class="spec-multiplier">15–60×</div>
-      <div class="spec-actual">1 ms poll</div>
-      <div class="spec-desc">vs 15–60 ms touch apps</div>
+
+    <div class="chart-unit">
+      <div class="chart-label">RAW COMPONENT BOM SPREAD <span>[LOW vs HIGH]</span></div>
+      <div class="chart-box"><canvas id="c2"></canvas></div>
     </div>
-    <div class="spec-cell">
-      <div class="spec-multiplier">9–22×</div>
-      <div class="spec-actual">20–35 mA</div>
-      <div class="spec-desc">vs 300–450 mA deck draw</div>
+
+    <div class="chart-unit">
+      <div class="chart-label">TRIGGER LATENCY <span>[POLL INTERVAL MS]</span></div>
+      <div class="chart-box"><canvas id="c3"></canvas></div>
     </div>
-  </div>
 
-  <!-- BENCHMARK CHARTS -->
-  <div class="chart-unit">
-    <div class="chart-label">FINAL ASSEMBLED PRICE <span>[USD TOTAL]</span></div>
-    <div class="chart-box"><canvas id="c0"></canvas></div>
-  </div>
+    <div class="chart-unit">
+      <div class="chart-label">5V BUS DRAW <span>[mA CURRENT CONSUMPTION]</span></div>
+      <div class="chart-box"><canvas id="c4"></canvas></div>
+    </div>
 
-  <div class="chart-unit">
-    <div class="chart-label">UNIT COST PER PHYSICAL KEY <span>[USD / KEY]</span></div>
-    <div class="chart-box" style="height: 180px;"><canvas id="c1"></canvas></div>
-  </div>
+    <div class="chips">
+      <span class="chip">RP2040</span>
+      <span class="chip">QMK/VIAL</span>
+      <span class="chip">EASYEDA</span>
+      <span class="chip">C++</span>
+      <span class="chip">PYTHON</span>
+      <span class="chip">FASTAPI</span>
+      <span class="chip">SQLITE</span>
+      <span class="chip">POWERSHELL</span>
+    </div>
+  </section>
 
-  <div class="chart-unit">
-    <div class="chart-label">RAW COMPONENT BOM SPREAD <span>[LOW vs HIGH]</span></div>
-    <div class="chart-box"><canvas id="c2"></canvas></div>
-  </div>
+  <!-- ===================== TAB 2: €5 TAG ===================== -->
+  <section id="panel-tag" class="tab-panel" data-panel="tag" role="tabpanel" hidden>
+    <div class="silk-head">
+      <div class="silk-brand">
+        <h1>TAG // €5</h1>
+        <p class="tagline">no-name tracker · find-my-ish · pocket change</p>
+        <p style="font-size: 0.72rem; color: var(--silkscreen); margin-top: 4px;">CR2032 BLE coin-cell tracker · phone-app tracked</p>
+      </div>
+      <div class="silk-meta">
+        SOURCE: <span>BUDGET BIN</span><br>
+        STATUS: <span class="status-badge">€5 CLONE</span>
+      </div>
+    </div>
 
-  <div class="chart-unit">
-    <div class="chart-label">TRIGGER LATENCY <span>[POLL INTERVAL MS]</span></div>
-    <div class="chart-box"><canvas id="c3"></canvas></div>
-  </div>
+    <!-- SPECS STRIP: WHERE IT WINS (green) vs WHERE IT LOSES (red) -->
+    <div class="specs-strip">
+      <div class="spec-cell">
+        <div class="spec-multiplier">7×</div>
+        <div class="spec-actual">€5.00</div>
+        <div class="spec-desc">vs €35 apple airtag</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-multiplier">1×</div>
+        <div class="spec-actual">CR2032</div>
+        <div class="spec-desc">same coin cell · swappable</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-multiplier loss">0.5×</div>
+        <div class="spec-actual">~6 mo</div>
+        <div class="spec-desc">vs ~12 mo airtag life</div>
+      </div>
+      <div class="spec-cell">
+        <div class="spec-multiplier loss">0×</div>
+        <div class="spec-actual">no UWB</div>
+        <div class="spec-desc">no precision finding</div>
+      </div>
+    </div>
 
-  <div class="chart-unit">
-    <div class="chart-label">5V BUS DRAW <span>[mA CURRENT CONSUMPTION]</span></div>
-    <div class="chart-box"><canvas id="c4"></canvas></div>
-  </div>
+    <!-- BENCHMARK CHARTS -->
+    <div class="chart-unit">
+      <div class="chart-label">FINAL UNIT PRICE <span>[EUR TOTAL]</span></div>
+      <div class="chart-box"><canvas id="c5"></canvas></div>
+    </div>
 
-  <!-- ADJACENT PROJECTS -->
+    <div class="chart-unit">
+      <div class="chart-label">BATTERY LIFE <span>[MONTHS]</span></div>
+      <div class="chart-box"><canvas id="c6"></canvas></div>
+    </div>
+
+    <div class="chart-unit">
+      <div class="chart-label">EFFECTIVE BLE RANGE <span>[METRES]</span></div>
+      <div class="chart-box"><canvas id="c7"></canvas></div>
+    </div>
+
+    <div class="chart-unit">
+      <div class="chart-label">PRECISION FINDING <span>[METRES · UWB]</span></div>
+      <div class="chart-box" style="height: 180px;"><canvas id="c8"></canvas></div>
+    </div>
+
+    <p class="note">// FIGURES ARE TYPICAL MARKET SPECS FOR EACH CLASS, NOT LAB-MEASURED. GREEN = THE €5 TAG.</p>
+
+    <div class="chips">
+      <span class="chip">BLE 5.0</span>
+      <span class="chip">CR2032</span>
+      <span class="chip">FIND-MY (CLONE)</span>
+      <span class="chip">IP67</span>
+      <span class="chip">~8 g</span>
+      <span class="chip">NO UWB</span>
+    </div>
+  </section>
+
+  <!-- SHARED: ADJACENT PROJECTS -->
   <div class="sub-section">
     <div class="sub-title">// ADJACENT EXPERIMENTS & FIRMWARE</div>
     <div class="work-grid">
@@ -368,17 +501,6 @@
         <div class="item-name">zalks-stats ↗</div>
         <div class="item-desc">minecraft fabric telemetry mod tracking real-time server/client tps.</div>
       </a>
-    </div>
-
-    <div class="chips">
-      <span class="chip">RP2040</span>
-      <span class="chip">QMK/VIAL</span>
-      <span class="chip">EASYEDA</span>
-      <span class="chip">C++</span>
-      <span class="chip">PYTHON</span>
-      <span class="chip">FASTAPI</span>
-      <span class="chip">SQLITE</span>
-      <span class="chip">POWERSHELL</span>
     </div>
   </div>
 
@@ -418,8 +540,12 @@
     }
   };
 
+  const instances = {};
+
   function mk(id, labels, sets, vl, y) {
-    new Chart(document.getElementById(id), {
+    const el = document.getElementById(id);
+    if (!el) return;
+    instances[id] = new Chart(el, {
       type: 'bar',
       plugins: [labelPlugin],
       data: {
@@ -457,36 +583,92 @@
   }
 
   const usd = v => '$' + v;
+  const eur = v => '€' + v;
 
-  mk('c0',
-    ['Volos', 'Adafruit', 'Freedeck', 'DuckyPad', 'Stream Deck'],
-    [{ d: [22.6, 55, 75, 85, 149.99], c: [G, S, S, S, S] }],
-    ['$22.60', '$55', '$75', '$85', '$149.99'],
-    { ticks: { color: muted, callback: usd } });
+  let volosBuilt = false, tagBuilt = false;
 
-  mk('c1',
-    ['Volos', 'DuckyPad', 'Freedeck', 'Stream Deck'],
-    [{ d: [0.93, 3, 6.5, 10], c: [G, S, S, S] }],
-    ['$0.93', '$3.00', '$6.50', '$10.00'],
-    { ticks: { color: muted, callback: usd } });
+  function buildVolos() {
+    if (volosBuilt) return;
+    volosBuilt = true;
+    mk('c0',
+      ['Volos', 'Adafruit', 'Freedeck', 'DuckyPad', 'Stream Deck'],
+      [{ d: [22.6, 55, 75, 85, 149.99], c: [G, S, S, S, S] }],
+      ['$22.60', '$55', '$75', '$85', '$149.99'],
+      { ticks: { color: muted, callback: usd } });
 
-  mk('c2',
-    ['Volos', 'Adafruit', 'DuckyPad', 'Freedeck'],
-    [{ d: [11, 35, 38, 48], c: [GL, SL, SL, SL] }, { d: [23, 45, 55, 75], c: [G, S, S, S] }],
-    ['$11\u2013$23', '$35\u2013$45', '$38\u2013$55', '$48\u2013$75'],
-    { ticks: { color: muted, callback: usd } });
+    mk('c1',
+      ['Volos', 'DuckyPad', 'Freedeck', 'Stream Deck'],
+      [{ d: [0.93, 3, 6.5, 10], c: [G, S, S, S] }],
+      ['$0.93', '$3.00', '$6.50', '$10.00'],
+      { ticks: { color: muted, callback: usd } });
 
-  mk('c3',
-    ['Volos (HID)', 'Stream-Pi (min)', 'Stream-Pi (max)'],
-    [{ d: [1, 15, 60], c: [G, SL, S] }],
-    ['1 ms', '15 ms', '60 ms'],
-    { max: 70, ticks: { color: muted, callback: v => v + ' ms' } });
+    mk('c2',
+      ['Volos', 'Adafruit', 'DuckyPad', 'Freedeck'],
+      [{ d: [11, 35, 38, 48], c: [GL, SL, SL, SL] }, { d: [23, 45, 55, 75], c: [G, S, S, S] }],
+      ['$11\u2013$23', '$35\u2013$45', '$38\u2013$55', '$48\u2013$75'],
+      { ticks: { color: muted, callback: usd } });
 
-  mk('c4',
-    ['Volos (idle)', 'Stream Deck (15 LCD)'],
-    [{ d: [20, 300], c: [GL, SL] }, { d: [35, 450], c: [G, S] }],
-    ['20\u201335 mA', '300\u2013450 mA'],
-    { ticks: { color: muted, callback: v => v + ' mA' } });
+    mk('c3',
+      ['Volos (HID)', 'Stream-Pi (min)', 'Stream-Pi (max)'],
+      [{ d: [1, 15, 60], c: [G, SL, S] }],
+      ['1 ms', '15 ms', '60 ms'],
+      { max: 70, ticks: { color: muted, callback: v => v + ' ms' } });
+
+    mk('c4',
+      ['Volos (idle)', 'Stream Deck (15 LCD)'],
+      [{ d: [20, 300], c: [GL, SL] }, { d: [35, 450], c: [G, S] }],
+      ['20\u201335 mA', '300\u2013450 mA'],
+      { ticks: { color: muted, callback: v => v + ' mA' } });
+  }
+
+  function buildTag() {
+    if (tagBuilt) return;
+    tagBuilt = true;
+
+    mk('c5',
+      ['€5 Tag', 'Tile Mate', 'SmartTag2', 'AirTag'],
+      [{ d: [5, 25, 30, 35], c: [G, S, S, S] }],
+      ['€5.00', '€25', '€30', '€35'],
+      { ticks: { color: muted, callback: eur } });
+
+    mk('c6',
+      ['€5 Tag', 'SmartTag2', 'AirTag', 'Tile Mate'],
+      [{ d: [6, 6, 12, 12], c: [G, S, S, S] }],
+      ['~6 mo', '~6 mo', '~12 mo', '~12 mo'],
+      { ticks: { color: muted, callback: v => v + ' mo' } });
+
+    mk('c7',
+      ['€5 Tag', 'Tile Mate', 'AirTag', 'SmartTag2'],
+      [{ d: [50, 60, 90, 120], c: [G, S, S, S] }],
+      ['~50 m', '~60 m', '~90 m', '~120 m'],
+      { ticks: { color: muted, callback: v => v + ' m' } });
+
+    mk('c8',
+      ['€5 Tag', 'Tile Mate', 'AirTag', 'SmartTag2'],
+      [{ d: [0, 0, 30, 120], c: [G, S, S, S] }],
+      ['none', 'none', '~30 m', '~120 m'],
+      { ticks: { color: muted, callback: v => v + ' m' } });
+  }
+
+  function showTab(which) {
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.hidden = (p.dataset.panel !== which);
+    });
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === which);
+    });
+    if (which === 'volos') buildVolos();
+    if (which === 'tag') buildTag();
+    requestAnimationFrame(() => {
+      Object.keys(instances).forEach(k => instances[k] && instances[k].resize());
+    });
+  }
+
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => showTab(t.dataset.tab));
+  });
+
+  showTab('volos');
 </script>
 </body>
 </html>
