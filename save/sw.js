@@ -1,5 +1,5 @@
 // droptok service worker — offline shell + TikTok share target.
-const CACHE = "droptok-v1";
+const CACHE = "droptok-v2";
 const SHARE_PATH = new URL("./share", self.location.href).pathname;
 const SHELL = [
   "./",
