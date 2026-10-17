@@ -353,6 +353,9 @@ footer {
   color: #5c6478;
 }
 .net { display: inline-flex; align-items: center; gap: 6px; }
+.foot-right { display: inline-flex; align-items: center; gap: 14px; }
+footer a { color: var(--muted); text-decoration: none; border-bottom: 1px dotted #3a4152; }
+footer a:hover { color: var(--accent-2); border-bottom-color: var(--accent-2); }
 .net::before {
   content: "";
   width: 6px; height: 6px;
