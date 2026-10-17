@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>droptok — save TikToks</title>
+<meta name="description" content="Paste a TikTok link, get the clean MP4 straight into your gallery.">
+<meta name="theme-color" content="#0b0c0f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="droptok">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="stylesheet" href="./app.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>droptok</span>
+  </div>
+  <button id="install" class="ghost" hidden>Install</button>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Drop a TikTok.<br><span>Keep the clean file.</span></h1>
+    <p class="sub">No watermark. Straight to your gallery.</p>
+  </section>
+
+  <form id="form" class="input-card" autocomplete="off">
+    <input id="url" type="text" inputmode="url" spellcheck="false" placeholder="https://www.tiktok.com/@user/video/…" aria-label="TikTok link">
+    <div class="row">
+      <button type="button" id="pasteBtn" class="paste">Paste</button>
+      <button type="submit" id="goBtn" class="go">Get video</button>
+    </div>
+  </form>
+
+  <p id="status" class="status" role="status" aria-live="polite"></p>
+
+  <section id="result" class="result" hidden>
+    <div class="thumb"><img id="thumb" alt="Video cover" referrerpolicy="no-referrer"></div>
+    <div class="meta">
+      <span class="badge">no watermark</span>
+      <h2 id="title"></h2>
+      <p id="byline"></p>
+      <p id="facts" class="facts"></p>
+    </div>
+    <div class="actions">
+      <button id="saveVideo" class="primary" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Save video
+      </button>
+      <button id="saveAudio" class="secondary" type="button">Save sound</button>
+      <button id="saveCover" class="secondary" type="button">Cover</button>
+    </div>
+  </section>
+
+  <details class="how">
+    <summary>How to send straight from TikTok</summary>
+    <ol>
+      <li>Tap <strong>Install</strong> at the top (or Chrome menu → <em>Add to Home screen</em>).</li>
+      <li>Open TikTok, tap <strong>Share</strong> on a video.</li>
+      <li>Pick <strong>droptok</strong> from the share sheet. It opens with the link already filled in.</li>
+    </ol>
+    <p class="tiny">On iPhone, Safari can't put web apps in the share sheet — copy the link and use Paste here.</p>
+  </details>
+
+  <section id="recentWrap" class="recent" hidden>
+    <div class="recent-head"><h3>Recent</h3><button id="clearBtn" class="ghost tiny-btn" type="button">Clear</button></div>
+    <ul id="recent"></ul>
+  </section>
+
+  <footer>
+    <span>txtwall.xyz/save</span>
+    <span id="net" class="net">online</span>
+  </footer>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="./app.js"></script>
+</body>
+</html>
