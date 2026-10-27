@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="referrer" content="no-referrer" />
+<title>Exposure Report — what this site knows about you</title>
+<style>
+  :root {
+    --bg: #07090c;
+    --panel: #0d1117;
+    --panel-2: #10161d;
+    --line: #1d2733;
+    --line-soft: #161e28;
+    --text: #d5e2ee;
+    --dim: #7e8fa3;
+    --faint: #4a5a6b;
+    --accent: #38e08b;
+    --accent-dim: #1b6d47;
+    --high: #ff5f6d;
+    --med: #ffb020;
+    --low: #4f9fd8;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, system-ui, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(900px 500px at 12% -10%, rgba(56,224,139,.09), transparent 60%),
+      radial-gradient(700px 400px at 105% 8%, rgba(79,159,216,.07), transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrap { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; padding: 0 20px; }
+
+  /* ---------- header ---------- */
+  header { padding: 54px 0 8px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .32em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 18px;
+  }
+  .eyebrow::before {
+    content: ""; width: 26px; height: 1px; background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+  h1 {
+    font-size: clamp(28px, 5vw, 46px);
+    line-height: 1.1;
+    letter-spacing: -.02em;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  h1 em { font-style: normal; color: var(--high); }
+  .sub {
+    color: var(--dim);
+    font-size: 15px;
+    max-width: 62ch;
+  }
+  .sub b { color: var(--text); font-weight: 600; }
+
+  /* ---------- fingerprint hero ---------- */
+  .fingerprint {
+    margin-top: 30px;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border-radius: 16px;
+    padding: 22px 24px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 22px;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .fingerprint::after {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: .5;
+  }
+  .fp-label {
+    font-family: var(--mono);
+    font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--faint); margin-bottom: 8px;
+  }
+  .fp-hash {
+    font-family: var(--mono);
+    font-size: clamp(20px, 3.6vw, 31px);
+    letter-spacing: .04em;
+    color: var(--accent);
+    text-shadow: 0 0 26px rgba(56,224,139,.35);
+    word-break: break-all;
+  }
+  .fp-meta {
+    font-size: 12.5px; color: var(--dim); margin-top: 10px;
+    display: flex; flex-wrap: wrap; gap: 6px 16px;
+  }
+  .fp-meta span { font-family: var(--mono); font-size: 11.5px; }
+  .fp-meta b { color: var(--text); }
+  .actions { display: flex; flex-direction: column; gap: 8px; min-width: 178px; }
+  button {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 11px 16px;
+    border-radius: 9px;
+    border: 1px solid var(--line);
+    background: #131b24;
+    color: var(--text);
+    cursor: pointer;
+    transition: .16s;
+    white-space: nowrap;
+  }
+  button:hover { border-color: var(--accent-dim); color: var(--accent); background: #152019; }
+  button:active { transform: translateY(1px); }
+  button.primary { background: rgba(56,224,139,.1); border-color: var(--accent-dim); color: var(--accent); }
+  button.primary:hover { background: rgba(56,224,139,.17); }
+
+  /* ---------- meter ---------- */
+  .meter-wrap { margin-top: 18px; }
+  .meter-top {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--faint); margin-bottom: 8px;
+  }
+  .meter-top b { color: var(--text); font-size: 12px; }
+  .meter {
+    height: 6px; border-radius: 99px; background: #131b24;
+    overflow: hidden; border: 1px solid var(--line-soft);
+  }
+  .meter i {
+    display: block; height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--med), var(--high));
+    border-radius: 99px;
+    transition: width .9s cubic-bezier(.2,.9,.2,1);
+    box-shadow: 0 0 14px rgba(255,95,109,.4);
+  }
+  .meter-note { font-size: 12px; color: var(--faint); margin-top: 9px; margin-bottom: 40px; }
+
+  /* ---------- grid ---------- */
+  main { padding-bottom: 20px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+  }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 14px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: rise .5s cubic-bezier(.2,.9,.2,1) forwards;
+  }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  .card-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line-soft);
+    background: var(--panel-2);
+  }
+  .card-head h2 {
+    font-size: 12px; letter-spacing: .16em; text-transform: uppercase;
+    font-weight: 600; color: #a9bccd; flex: 1;
+  }
+  .card-head .count {
+    font-family: var(--mono); font-size: 10.5px; color: var(--faint);
+    border: 1px solid var(--line); border-radius: 99px; padding: 2px 8px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); flex: none; }
+
+  .rows { padding: 4px 0 6px; }
+  .row {
+    display: grid;
+    grid-template-columns: minmax(96px, 38%) 1fr auto;
+    gap: 12px;
+    align-items: start;
+    padding: 9px 16px;
+    border-bottom: 1px solid rgba(29,39,51,.5);
+    font-size: 12.5px;
+  }
+  .row:last-child { border-bottom: none; }
+  .row:hover { background: rgba(56,224,139,.025); }
+  .k { color: var(--dim); font-size: 11.5px; letter-spacing: .02em; padding-top: 1px; }
+  .v {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  .v.muted { color: var(--faint); font-style: italic; }
+  .chip {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 3px 6px;
+    border-radius: 4px;
+    border: 1px solid;
+    white-space: nowrap;
+    margin-top: 1px;
+  }
+  .chip[data-l="high"] { color: var(--high); border-color: rgba(255,95,109,.35); background: rgba(255,95,109,.07); }
+  .chip[data-l="med"]  { color: var(--med);  border-color: rgba(255,176,32,.32); background: rgba(255,176,32,.06); }
+  .chip[data-l="low"]  { color: var(--low);  border-color: rgba(79,159,216,.28); background: rgba(79,159,216,.05); }
+
+  .card-note {
+    padding: 10px 16px 13px;
+    font-size: 11.5px;
+    color: var(--faint);
+    border-top: 1px solid var(--line-soft);
+    line-height: 1.55;
+  }
+
+  /* ---------- raw ---------- */
+  .raw-wrap { margin: 18px 0 0; }
+  .raw-head {
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 16px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--panel-2);
+    cursor: pointer;
+    user-select: none;
+  }
+  .raw-head:hover { border-color: var(--accent-dim); }
+  .raw-head h2 { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: #a9bccd; flex: 1; font-weight: 600; }
+  .raw-head .caret { font-family: var(--mono); color: var(--faint); transition: transform .25s; }
+  .raw-head.open .caret { transform: rotate(90deg); }
+  pre#json {
+    display: none;
+    margin-top: 10px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #05080b;
+    padding: 16px;
+    max-height: 480px;
+    overflow: auto;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.65;
+    color: #a9c0d4;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  pre#json.show { display: block; }
+
+  /* ---------- footer ---------- */
+  footer {
+    margin-top: 34px;
+    padding: 26px 0 60px;
+    border-top: 1px solid var(--line-soft);
+    font-size: 12px;
+    color: var(--faint);
+    display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center;
+  }
+  footer .seal {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--accent-dim);
+    border: 1px solid var(--accent-dim); border-radius: 99px;
+    padding: 4px 10px;
+  }
+  code { font-family: var(--mono); font-size: .95em; color: #9fb6c9; background: #10161d; padding: 1px 5px; border-radius: 4px; }
+
+  .toast {
+    position: fixed; bottom: 22px; left: 50%; transform: translate(-50%, 20px);
+    background: #16241c; border: 1px solid var(--accent-dim); color: var(--accent);
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em;
+    padding: 10px 18px; border-radius: 99px;
+    opacity: 0; pointer-events: none; transition: .25s; z-index: 50;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  ::selection { background: rgba(56,224,139,.25); }
+
+  /* ---------- dossier (bottom, full record) ---------- */
+  .dossier {
+    margin-top: 26px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: linear-gradient(180deg, #080c10, #05080b);
+    overflow: hidden;
+  }
+  .dos-head {
+    padding: 17px 20px 14px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(90deg, rgba(56,224,139,.07), transparent 70%);
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .dos-badge {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase;
+    color: #04140c; background: var(--accent); padding: 3px 8px; border-radius: 4px; font-weight: 700;
+  }
+  .dos-head h2 {
+    font-size: 13px; letter-spacing: .13em; text-transform: uppercase;
+    color: #cfe0ee; font-weight: 600; flex: 1; min-width: 180px;
+  }
+  .dos-stamp { font-family: var(--mono); font-size: 10.5px; color: var(--faint); }
+  .dos-body { padding: 8px 20px 20px; }
+  .dos-sub {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--faint); margin: 20px 0 11px; display: flex; align-items: center; gap: 12px;
+  }
+  .dos-sub::before { content: "//"; color: var(--accent-dim); }
+  .dos-sub::after { content: ""; flex: 1; height: 1px; background: var(--line-soft); }
+  .dos-profile { display: grid; gap: 10px; }
+  .pline {
+    display: grid; grid-template-columns: 74px 1fr; gap: 12px;
+    align-items: start; font-size: 13px; color: #b9cbda; line-height: 1.55;
+  }
+  .pline .tag {
+    font-family: var(--mono); font-size: 8.5px; letter-spacing: .09em; text-transform: uppercase;
+    padding: 3px 4px; border-radius: 3px; text-align: center; margin-top: 1px;
+  }
+  .pline[data-t="fact"] .tag { color: var(--low); border: 1px solid rgba(79,159,216,.38); background: rgba(79,159,216,.09); }
+  .pline[data-t="inference"] .tag { color: var(--med); border: 1px solid rgba(255,176,32,.34); background: rgba(255,176,32,.08); }
+  .pline b { color: #ffffff; font-weight: 600; }
+  .dl-group { margin-top: 18px; }
+  .dl-gh {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--accent-dim); margin-bottom: 7px; display: flex; gap: 8px;
+  }
+  .dl-gh span { color: var(--faint); }
+  .dl-row {
+    display: grid; grid-template-columns: 210px 1fr 78px; gap: 12px;
+    padding: 5px 0; border-bottom: 1px solid rgba(29,39,51,.45);
+    align-items: start;
+  }
+  .dl-row:last-child { border-bottom: none; }
+  .dl-k { color: var(--dim); font-size: 11.5px; }
+  .dl-v {
+    font-family: var(--mono); font-size: 11.5px; color: #b7c8d6;
+    word-break: break-word; overflow-wrap: anywhere;
+  }
+  .dl-v.none { color: var(--faint); font-style: italic; }
+  .dl-w {
+    font-family: var(--mono); font-size: 8.5px; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--faint); padding-top: 2px; text-align: right;
+  }
+  .dl-w[data-l="high"] { color: rgba(255,95,109,.85); }
+  .dl-w[data-l="med"] { color: rgba(255,176,32,.8); }
+  .dos-foot {
+    padding: 14px 20px 18px; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 11px; color: var(--faint);
+    display: flex; flex-wrap: wrap; gap: 6px 20px; line-height: 1.7;
+  }
+
+  /* ---------- uniqueness estimate ---------- */
+  .uniq {
+    margin-top: 22px;
+    border: 1px solid rgba(56,224,139,.28);
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(56,224,139,.075), rgba(56,224,139,.012) 55%, transparent);
+    padding: 17px 19px 16px;
+  }
+  .uniq-label {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 9px;
+  }
+  .uniq-top { display: flex; align-items: baseline; gap: 6px 14px; flex-wrap: wrap; }
+  .uniq-num {
+    font-family: var(--mono); font-size: clamp(20px, 5.4vw, 33px); font-weight: 700;
+    color: #ffffff; line-height: 1.1; letter-spacing: -.01em; white-space: nowrap;
+  }
+  .uniq-num span { color: var(--accent); text-shadow: 0 0 22px rgba(56,224,139,.35); }
+  .uniq-sub { font-size: 12.5px; color: var(--dim); }
+  .uniq-bar {
+    position: relative; height: 8px; margin-top: 15px;
+    border-radius: 99px; background: #0b1218; border: 1px solid var(--line);
+  }
+  .uniq-bar i {
+    position: absolute; top: -4px; left: 2%; width: 2px; height: 14px;
+    background: var(--accent); border-radius: 2px;
+    box-shadow: 0 0 12px var(--accent);
+    transition: left 1.1s cubic-bezier(.2,.9,.2,1);
+  }
+  .uniq-scale {
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 8.5px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--faint); margin-top: 8px;
+  }
+  .uniq-drivers {
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: #8fa3b6;
+    line-height: 1.85;
+  }
+  .uniq-drivers .lead { color: var(--faint); letter-spacing: .1em; text-transform: uppercase; font-size: 9px; }
+  .uniq-drivers b { color: var(--accent); font-weight: 600; }
+  .uniq-drivers .sep { color: var(--faint); margin: 0 5px; }
+  .uniq-note { margin-top: 12px; font-size: 11px; color: var(--faint); line-height: 1.65; }
+
+  /* ---------- narrow screens ---------- */
+  @media (max-width: 720px) {
+    header { padding: 34px 0 8px; }
+    .eyebrow { font-size: 10px; letter-spacing: .26em; }
+    .sub { font-size: 13.5px; }
+    .fingerprint { grid-template-columns: 1fr; gap: 16px; padding: 18px; }
+    .fp-hash { font-size: 23px; letter-spacing: .01em; }
+    .fp-meta { gap: 4px 14px; }
+    .actions { flex-direction: row; flex-wrap: wrap; min-width: 0; gap: 7px; }
+    .actions button { flex: 1 1 130px; padding: 10px 10px; font-size: 10.5px; }
+    .meter-note { margin-bottom: 28px; }
+  }
+  @media (max-width: 560px) {
+    .row { grid-template-columns: 1fr auto; gap: 4px 10px; padding: 10px 14px; }
+    .k { grid-column: 1 / -1; font-size: 11px; }
+    .v { grid-column: 1; }
+    .chip { grid-column: 2; grid-row: 2; }
+    .card-head h2 { font-size: 11px; letter-spacing: .12em; }
+    footer { padding-bottom: 44px; gap: 8px 14px; }
+    .dos-body { padding: 8px 15px 18px; }
+    .dos-head { padding: 14px 15px 12px; }
+    .dos-head h2 { font-size: 11.5px; }
+    .pline { grid-template-columns: 58px 1fr; gap: 9px; font-size: 12.5px; }
+    .pline .tag { font-size: 8px; }
+    .dl-row { grid-template-columns: 1fr; gap: 1px; padding: 7px 0; }
+    .dl-k { font-size: 11px; }
+    .dl-w { display: none; }
+    .dl-gh { font-size: 9px; letter-spacing: .1em; flex-wrap: nowrap; }
+    .dl-gh span { white-space: nowrap; }
+    .dl-group { margin-top: 15px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Privacy exposure report</div>
+    <h1>Everything this site learned about you <em>before you clicked anything.</em></h1>
+    <p class="sub">
+      No login, no cookie was set, no tracking script, no third-party request.
+      Just the standard browser APIs any page can call on load. Here is the pile of data
+      that came back — collected locally, displayed to you only.
+    </p>
+
+    <div class="fingerprint">
+      <div>
+        <div class="fp-label">// composite fingerprint</div>
+        <div class="fp-hash" id="fphash">computing…</div>
+        <div class="fp-meta" id="fpmeta"></div>
+      </div>
+      <div class="actions">
+        <button class="primary" id="copyBtn">Copy report</button>
+        <button id="dlBtn">Download .json</button>
+        <button id="wipeBtn">Clear &amp; reload</button>
+      </div>
+    </div>
+
+    <div class="meter-wrap">
+      <div class="meter-top">
+        <span>Identifying signal density</span>
+        <b id="meterVal">—</b>
+      </div>
+      <div class="meter"><i id="meterBar"></i></div>
+      <div class="meter-note" id="meterNote"></div>
+    </div>
+  </header>
+
+  <main>
+    <div class="grid" id="grid"></div>
+
+    <div class="raw-wrap">
+      <div class="raw-head" id="rawHead">
+        <span class="dot"></span>
+        <h2>Raw payload</h2>
+        <span class="caret">▸</span>
+      </div>
+      <pre id="json">{}</pre>
+    </div>
+
+    <section class="dossier">
+      <div class="dos-head">
+        <span class="dos-badge">complete record</span>
+        <h2>Everything this page currently knows</h2>
+        <span class="dos-stamp" id="dosStamp"></span>
+      </div>
+      <div class="dos-body">
+        <div class="dos-sub">derived profile</div>
+        <div class="dos-profile" id="dosProfile"></div>
+        <div class="dos-sub">every value collected</div>
+        <div id="dosList"></div>
+
+        <div class="uniq">
+          <div class="uniq-label">// this signature filters you to</div>
+          <div class="uniq-top">
+            <div class="uniq-num">≈ 1 in <span id="uniqN">—</span></div>
+            <div class="uniq-sub">devices share this exact combination</div>
+          </div>
+          <div class="uniq-bar"><i id="uniqMark"></i></div>
+          <div class="uniq-scale"><span>1 · everyone</span><span>never seen before</span></div>
+          <div class="uniq-drivers" id="uniqDrivers"></div>
+          <div class="uniq-note" id="uniqNote"></div>
+        </div>
+      </div>
+      <div class="dos-foot" id="dosFoot"></div>
+    </section>
+  </main>
+
+  <footer>
+    <span class="seal">0 network requests</span>
+    <span>Verify: DevTools → Network, hard reload. Nothing leaves this page.</span>
+    <span>Nothing written to cookies, localStorage, or IndexedDB.</span>
+  </footer>
+</div>
+
+<div class="toast" id="toast">Copied</div>
+
+<script>
+(async () => {
+  "use strict";
+
+  /* ------------------------------------------------------------------ *
+   *  collection helpers
+   * ------------------------------------------------------------------ */
+  const sections = [];
+  let current = null;
+
+  function sec(title, note) {
+    current = { title, note: note || "", rows: [] };
+    sections.push(current);
+    return current;
+  }
+  function row(label, value, level) {
+    let v = value;
+    if (v === null || v === undefined || v === "" || (typeof v === "number" && isNaN(v))) v = null;
+    current.rows.push({ k: label, v: v === null ? null : String(v), l: level || "low" });
+  }
+  const clean = s => (s == null ? "" : String(s).replace(/\s+/g, " ").trim());
+
+  async function sha256(str) {
+    try {
+      if (!crypto || !crypto.subtle) throw new Error("no subtle");
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+      return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+    } catch (e) {
+      // non-secure context fallback (FNV-1a, not cryptographic)
+      let h1 = 0x811c9dc5, h2 = 0x01000193;
+      for (let i = 0; i < str.length; i++) {
+        const c = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ c, 16777619) >>> 0;
+        h2 = Math.imul(h2 ^ c, 2246822519) >>> 0;
+      }
+      return (h1.toString(16) + h2.toString(16) + (h1 ^ h2).toString(16)).padStart(32, "0");
+    }
+  }
+
+  /* ---------------------------- canvas ---------------------------- */
+  function canvasFingerprint() {
+    try {
+      const c = document.createElement("canvas");
+      c.width = 300; c.height = 70;
+      const x = c.getContext("2d");
+      if (!x) return null;
+      x.fillStyle = "#f26d00";
+      x.fillRect(0, 0, 300, 70);
+      const g = x.createLinearGradient(0, 0, 300, 0);
+      g.addColorStop(0, "#ff0044"); g.addColorStop(0.5, "#00ff88"); g.addColorStop(1, "#0044ff");
+      x.fillStyle = g; x.fillRect(0, 44, 300, 26);
+      x.fillStyle = "#063";
+      x.font = "17px 'Times New Roman', serif";
+      x.textBaseline = "alphabetic";
+      x.fillText("Cwm fjordbank glyphs vext quiz 🐦", 3, 18);
+      x.fillStyle = "rgba(102,204,0,0.65)";
+      x.font = "15px Arial, sans-serif";
+      x.fillText("Cwm fjordbank glyphs vext quiz 🐦", 6, 38);
+      x.globalCompositeOperation = "multiply";
+      x.beginPath(); x.arc(258, 22, 17, 0, Math.PI * 2); x.fillStyle = "#f0f"; x.fill();
+      x.globalCompositeOperation = "source-over";
+      return c.toDataURL();
+    } catch (e) { return null; }
+  }
+
+  /* ---------------------------- webgl ----------------------------- */
+  function webglInfo() {
+    const out = { renderer: null, vendor: null, version: null, maxTexture: null, antialias: null };
+    try {
+      const c = document.createElement("canvas");
+      const gl = c.getContext("webgl") || c.getContext("experimental-webgl");
+      if (!gl) return out;
+      const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+      out.renderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+      out.vendor = dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+      out.version = gl.getParameter(gl.VERSION);
+      out.maxTexture = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+      const attrs = gl.getContextAttributes();
+      out.antialias = attrs ? attrs.antialias : null;
+    } catch (e) { /* blocked */ }
+    return out;
+  }
+
+  /* ---------------------------- audio ----------------------------- */
+  async function audioFingerprint() {
+    try {
+      const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      if (!OAC) return null;
+      const ctx = new OAC(1, 44100, 44100);
+      const osc = ctx.createOscillator();
+      osc.type = "triangle";
+      osc.frequency.value = 10000;
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -50; comp.knee.value = 40; comp.ratio.value = 12;
+      comp.attack.value = 0; comp.release.value = 0.25;
+      osc.connect(comp); comp.connect(ctx.destination);
+      osc.start(0);
+      const buf = await ctx.startRendering();
+      const d = buf.getChannelData(0);
+      let sum = 0;
+      for (let i = 0; i < d.length; i++) sum += Math.abs(d[i]);
+      return sum.toFixed(8);
+    } catch (e) { return null; }
+  }
+
+  /* ---------------------------- fonts ----------------------------- */
+  const FONT_LIST = [
+    "Arial", "Arial Black", "Arial Narrow", "Calibri", "Cambria", "Candara", "Comic Sans MS",
+    "Consolas", "Courier New", "Georgia", "Impact", "Lucida Console", "Lucida Sans Unicode",
+    "MS Gothic", "MS PGothic", "Palatino Linotype", "Segoe Print", "Segoe Script", "Segoe UI",
+    "Segoe UI Emoji", "Sylfaen", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana",
+    "Webdings", "Wingdings", "Helvetica Neue", "Menlo", "Monaco", "Roboto", "Ubuntu",
+    "DejaVu Sans", "Noto Sans", "Cantarell", "Fira Sans", "Futura", "Gill Sans", "Baskerville",
+    "Optima", "Papyrus", "Copperplate", "Trattatello", "Chalkboard", "Marker Felt"
+  ];
+  function detectFonts() {
+    try {
+      const bases = ["monospace", "sans-serif", "serif"];
+      const probe = "mmmmmmmmmmlli1WWQ@#%&_€";
+      const span = document.createElement("span");
+      span.style.cssText = "position:absolute;left:-9999px;top:-9999px;font-size:64px;white-space:nowrap;line-height:1;";
+      span.textContent = probe;
+      document.body.appendChild(span);
+      const baseW = {};
+      for (const b of bases) { span.style.fontFamily = b; baseW[b] = span.getBoundingClientRect().width; }
+      const found = [];
+      for (const f of FONT_LIST) {
+        for (const b of bases) {
+          span.style.fontFamily = '"' + f + '",' + b;
+          if (Math.abs(span.getBoundingClientRect().width - baseW[b]) > 0.4) { found.push(f); break; }
+        }
+      }
+      span.remove();
+      return found;
+    } catch (e) { return []; }
+  }
+
+  /* ---------------------------- webrtc ---------------------------- */
+  function localCandidates(timeout) {
+    return new Promise(resolve => {
+      const found = new Set();
+      if (!window.RTCPeerConnection) return resolve([]);
+      let pc, timer;
+      const finish = () => {
+        clearTimeout(timer);
+        try { pc && pc.close(); } catch (e) {}
+        resolve([...found]);
+      };
+      try { pc = new RTCPeerConnection({ iceServers: [] }); } catch (e) { return resolve([]); }
+      timer = setTimeout(finish, timeout || 1400);
+      try {
+        pc.createDataChannel("probe");
+        pc.onicecandidate = e => {
+          if (!e.candidate) return finish();
+          const cand = e.candidate.candidate || "";
+          const m = /([0-9]{1,3}(?:\.[0-9]{1,3}){3}|(?:[0-9a-f]{1,4}:){2,}[0-9a-f:]*)/i.exec(cand);
+          if (m) found.add(m[1]);
+        };
+        pc.createOffer()
+          .then(o => pc.setLocalDescription(o))
+          .catch(() => finish());
+      } catch (e) { finish(); }
+    });
+  }
+
+  /* ================================================================== *
+   *  1. IDENTITY
+   * ================================================================== */
+  const nav = navigator;
+  const ua = clean(nav.userAgent);
+  sec("Identity & browser",
+      "Sent in the HTTP headers and readable by any script. The full UA string is one of the strongest single identifiers.");
+
+  row("User agent", ua, "high");
+  row("Browser engine", (() => {
+    if (/Edg\//.test(ua)) return "Chromium (Microsoft Edge)";
+    if (/OPR\//.test(ua)) return "Chromium (Opera)";
+    if (/Chrome\//.test(ua)) return "Chromium (Chrome-family)";
+    if (/Firefox\//.test(ua)) return "Gecko (Firefox)";
+    if (/Safari\//.test(ua)) return "WebKit (Safari)";
+    return "unknown";
+  })(), "med");
+  row("Platform", clean(nav.platform), "med");
+  row("Vendor", clean(nav.vendor) || null, "low");
+  row("Product", clean(nav.product) || null, "low");
+  row("Languages", (nav.languages || [nav.language]).join(", "), "high");
+  row("Cookies enabled", nav.cookieEnabled, "low");
+  row("Do Not Track", nav.doNotTrack || window.doNotTrack || null, "low");
+  row("Global Privacy Control", nav.globalPrivacyControl, "low");
+  row("Automation flag", nav.webdriver, "med");
+  row("PDF viewer", nav.pdfViewerEnabled, "low");
+  row("Plugin count", (nav.plugins && nav.plugins.length) || 0, "low");
+
+  // Client Hints (Chromium only)
+  let uaVersion = null, uaPlatform = null, uaArch = null, uaBits = null, uaModel = null, uaBrands = null;
+  if (nav.userAgentData) {
+    try {
+      uaBrands = (nav.userAgentData.brands || []).map(b => b.brand + " " + b.version).join(" · ");
+      const hi = await nav.userAgentData.getHighEntropyValues(
+        ["platformVersion", "architecture", "bitness", "model", "uaFullVersion", "fullVersionList"]
+      );
+      uaPlatform = hi.platformVersion;
+      uaArch = hi.architecture;
+      uaBits = hi.bitness;
+      uaModel = hi.model;
+      uaVersion = hi.uaFullVersion;
+    } catch (e) {}
+  }
+  sec("Client Hints (high entropy)",
+      "Chromium exposes these only on request via navigator.userAgentData — they pin down OS build, CPU architecture and even device model.");
+  row("Brands", uaBrands, "med");
+  row("Full version", uaVersion, "med");
+  row("OS platform version", uaPlatform, "high");
+  row("CPU architecture", uaArch ? uaArch + " / " + uaBits + "-bit" : null, "med");
+  row("Device model", uaModel || null, "high");
+
+  /* ================================================================== *
+   *  2. DISPLAY
+   * ================================================================== */
+  const scr = window.screen;
+  sec("Display & viewport",
+      "Resolution plus device pixel ratio is close to unique when combined with window size — it identifies a specific machine, not just a model.");
+  row("Screen resolution", scr.width + " × " + scr.height, "high");
+  row("Available area", scr.availWidth + " × " + scr.availHeight, "med");
+  row("Viewport", window.innerWidth + " × " + window.innerHeight, "med");
+  row("Device pixel ratio", window.devicePixelRatio, "high");
+  row("Colour depth", scr.colorDepth + "-bit", "low");
+  row("Pixel depth", scr.pixelDepth + "-bit", "low");
+  row("Orientation", (scr.orientation && scr.orientation.type) || null, "low");
+  row("Multi-monitor", typeof scr.isExtended === "boolean" ? scr.isExtended : null, "med");
+  row("Colour scheme", matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light", "low");
+  row("Reduced motion", matchMedia("(prefers-reduced-motion: reduce)").matches, "low");
+  row("High contrast", matchMedia("(prefers-contrast: more)").matches, "low");
+
+  /* ================================================================== *
+   *  3. LOCALE & TIME
+   * ================================================================== */
+  const opts = Intl.DateTimeFormat().resolvedOptions();
+  const offMin = -new Date().getTimezoneOffset();
+  const offSign = offMin >= 0 ? "+" : "-";
+  const offH = String(Math.floor(Math.abs(offMin) / 60)).padStart(2, "0");
+  const offM = String(Math.abs(offMin) % 60).padStart(2, "0");
+  sec("Locale & time",
+      "Timezone is a coarse geographic hint — usually narrowing you to one region, sometimes one city. It arrives without any permission prompt.");
+  row("Time zone", opts.timeZone, "high");
+  row("UTC offset", "UTC" + offSign + offH + ":" + offM, "med");
+  row("Locale", opts.locale, "med");
+  row("Calendar", opts.calendar, "low");
+  row("Numbering system", opts.numberingSystem, "low");
+  row("Number format", new Intl.NumberFormat().format(1234567.891), "low");
+  row("Local time", new Date().toLocaleString(), "low");
+  row("Preferred currency", (() => { try { return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).resolvedOptions().currency; } catch (e) { return null; } })(), "low");
+
+  /* ================================================================== *
+   *  4. HARDWARE
+   * ================================================================== */
+  sec("Hardware",
+      "Core count and memory tier are coarse, but they stack with everything else. Connected gamepads are readable without permission.");
+  row("Logical CPU cores", nav.hardwareConcurrency, "med");
+  row("Device memory", nav.deviceMemory ? nav.deviceMemory + " GB (approx)" : null, "med");
+  row("Max touch points", nav.maxTouchPoints, "high");
+  row("Pointer: coarse", matchMedia("(pointer: coarse)").matches, "low");
+  row("Pointer: fine", matchMedia("(pointer: fine)").matches, "low");
+  row("Hover capable", matchMedia("(hover: hover)").matches, "low");
+  const pads = (nav.getGamepads && nav.getGamepads()) ? [...nav.getGamepads()].filter(Boolean) : [];
+  row("Gamepads connected", pads.length ? pads.length + " — " + pads.map(p => p.id).join(" | ") : 0, "med");
+
+  let batteryLine = null;
+  try {
+    if (nav.getBattery) {
+      const b = await nav.getBattery();
+      batteryLine = Math.round(b.level * 100) + "% · " + (b.charging ? "charging" : "on battery");
+    }
+  } catch (e) {}
+  row("Battery", batteryLine, "med");
+
+  /* ================================================================== *
+   *  5. GPU & RENDERING
+   * ================================================================== */
+  const gl = webglInfo();
+  const canvasData = canvasFingerprint();
+  const audioData = await audioFingerprint();
+
+  sec("GPU & rendering",
+      "Your graphics card model is exposed in full. Canvas and audio rendering differ by driver, font stack and OS build — hashing them yields a near-stable ID even in private mode.");
+  row("GPU renderer", gl.renderer, "high");
+  row("GPU vendor", gl.vendor, "high");
+  row("WebGL version", gl.version, "low");
+  row("Max texture size", gl.maxTexture, "low");
+  row("Canvas antialiasing", gl.antialias, "low");
+  row("Canvas hash", canvasData ? (await sha256(canvasData)).slice(0, 16) : null, "high");
+  row("Audio hash", audioData, "high");
+
+  /* ================================================================== *
+   *  6. FONTS
+   * ================================================================== */
+  const fonts = detectFonts();
+  sec("Installed fonts",
+      "Measured by comparing glyph widths against fallback families — no permission needed. Detected set is a strong hint at OS, region and installed software.");
+  row("Fonts detected", fonts.length, "high");
+  row("Matched families", fonts.length ? fonts.join(", ") : null, "high");
+
+  /* ================================================================== *
+   *  7. NETWORK & STORAGE
+   * ================================================================== */
+  const conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+  sec("Network & storage",
+      "Connection shape plus storage quota can expose your provider class and even whether you are in private browsing.");
+  row("Online", nav.onLine, "low");
+  row("Connection type", conn ? (conn.type || null) : null, "med");
+  row("Effective speed class", conn ? (conn.effectiveType || null) : null, "med");
+  row("Downlink estimate", conn && conn.downlink ? conn.downlink + " Mb/s" : null, "med");
+  row("Round-trip time", conn && conn.rtt ? conn.rtt + " ms" : null, "med");
+  row("Data saver", conn ? conn.saveData : null, "low");
+  let storageLine = null, quotaHint = null;
+  try {
+    if (nav.storage && nav.storage.estimate) {
+      const est = await nav.storage.estimate();
+      if (est && est.quota) {
+        storageLine = (est.usage ? (est.usage / 1048576).toFixed(1) : "0") + " MB used of " +
+                      (est.quota / 1073741824).toFixed(1) + " GB quota";
+        quotaHint = est.quota < 200 * 1048576 ? "unusually small quota — private mode likely" : "normal quota";
+      }
+    }
+  } catch (e) {}
+  row("Storage estimate", storageLine, "med");
+  row("Quota interpretation", quotaHint, "med");
+  row("Referrer", clean(document.referrer) || "none", "low");
+  row("Landing URL", location.href, "low");
+
+  /* ================================================================== *
+   *  8. PERMISSIONS & DEVICES
+   * ================================================================== */
+  sec("Permissions & devices",
+      "Permission state can be read silently — only the browser prompt is gated. Device counts and installed system voices also leak.");
+  const perms = ["geolocation", "notifications", "camera", "microphone", "clipboard-read", "midi", "persistent-storage"];
+  if (nav.permissions && nav.permissions.query) {
+    for (const name of perms) {
+      let state = null;
+      try { state = (await nav.permissions.query({ name })).state; } catch (e) { state = "unsupported"; }
+      row(name, state, state === "granted" ? "high" : "low");
+    }
+  }
+  let devLine = null;
+  try {
+    if (nav.mediaDevices && nav.mediaDevices.enumerateDevices) {
+      const list = await nav.mediaDevices.enumerateDevices();
+      const c = k => list.filter(d => d.kind === k).length;
+      devLine = c("audioinput") + " mic · " + c("videoinput") + " camera · " + c("audiooutput") + " output";
+    }
+  } catch (e) {}
+  row("Media devices", devLine, "med");
+
+  let voices = [];
+  try {
+    if (window.speechSynthesis) {
+      voices = window.speechSynthesis.getVoices();
+      if (!voices.length) {
+        await new Promise(r => {
+          const t = setTimeout(r, 500);
+          window.speechSynthesis.onvoiceschanged = () => { clearTimeout(t); r(); };
+        });
+        voices = window.speechSynthesis.getVoices();
+      }
+    }
+  } catch (e) {}
+  row("Speech voices", voices.length ? voices.length + " installed" : null, "high");
+  row("Voice sample", voices.length ? voices.slice(0, 5).map(v => v.name).join(", ") + (voices.length > 5 ? "…" : "") : null, "high");
+
+  /* ================================================================== *
+   *  9. LOCAL NETWORK
+   * ================================================================== */
+  const ips = await localCandidates(1400);
+  const mdns = ips.filter(ip => /^[0-9a-f]{8}-[0-9a-f]{4}/i.test(ip) || /\.local$/i.test(ip));
+  sec("Local network",
+      "WebRTC can enumerate local interface addresses with no permission prompt. Modern browsers mask them as random mDNS hostnames — that masking itself is a signal.");
+  row("Candidates found", ips.length, "med");
+  row("Addresses", ips.length ? ips.join(", ") : "all masked (mDNS)", ips.length ? "high" : "low");
+  row("mDNS obfuscation", mdns.length > 0, "low");
+
+  /* ================================================================== *
+   *  10. WHAT IT CANNOT SEE
+   * ================================================================== */
+  sec("What this page cannot see",
+      "Worth knowing, so you can calibrate the real threat model instead of the theatre.");
+  row("Your IP address", "not readable by page JS — but the server hosting this file sees it", "low");
+  row("Other tabs / history", "blocked by the browser", "low");
+  row("Files on disk", "only via a picker you trigger", "low");
+  row("Camera / mic feed", "needs an explicit prompt", "low");
+  row("Passwords / autofill", "isolated from page scripts", "low");
+  row("Cross-site cookies", "blocked by default now", "low");
+
+  /* ================================================================== *
+   *  RENDER
+   * ================================================================== */
+  const grid = document.getElementById("grid");
+  const LEVEL_TEXT = { high: "identifying", med: "semi", low: "common" };
+
+  let total = 0, high = 0, med = 0;
+  const idx = { high: 0, med: 0, low: 0 };
+
+  sections.forEach((s, si) => {
+    const card = document.createElement("section");
+    card.className = "card";
+    card.style.animationDelay = Math.min(si * 45, 400) + "ms";
+
+    const head = document.createElement("div");
+    head.className = "card-head";
+    head.innerHTML = '<span class="dot"></span><h2></h2><span class="count"></span>';
+    head.querySelector("h2").textContent = s.title;
+    head.querySelector(".count").textContent = s.rows.length;
+    card.appendChild(head);
+
+    const rows = document.createElement("div");
+    rows.className = "rows";
+
+    s.rows.forEach(r => {
+      total++;
+      if (r.l === "high") high++; else if (r.l === "med") med++;
+      idx[r.l] = (idx[r.l] || 0) + 1;
+
+      const d = document.createElement("div");
+      d.className = "row";
+
+      const k = document.createElement("div");
+      k.className = "k";
+      k.textContent = r.k;
+
+      const v = document.createElement("div");
+      v.className = "v" + (r.v === null ? " muted" : "");
+      v.textContent = r.v === null ? "not exposed" : r.v;
+
+      const c = document.createElement("span");
+      c.className = "chip";
+      c.dataset.l = r.l;
+      c.textContent = LEVEL_TEXT[r.l];
+
+      d.append(k, v, c);
+      rows.appendChild(d);
+    });
+
+    card.appendChild(rows);
+
+    if (s.note) {
+      const n = document.createElement("div");
+      n.className = "card-note";
+      n.textContent = s.note;
+      card.appendChild(n);
+    }
+    grid.appendChild(card);
+  });
+
+  /* ---------------------------- fingerprint ---------------------------- */
+  // values that drift during a session (or depend on how you arrived) are excluded
+  // so the ID stays stable for the same machine + browser
+  const UNSTABLE = new Set([
+    "Viewport", "Local time", "Battery", "Storage estimate",
+    "Landing URL", "Referrer", "Downlink estimate", "Round-trip time",
+    "Addresses", "Candidates found"
+  ]);
+  const parts = [];
+  sections.slice(0, 9).forEach(s => s.rows.forEach(r => {
+    if (r.v !== null && !UNSTABLE.has(r.k)) parts.push(r.k + "=" + r.v);
+  }));
+  const fullHash = await sha256(parts.join("|"));
+  const shortHash = fullHash.slice(0, 16).toUpperCase().match(/.{1,4}/g).join(" ");
+
+  document.getElementById("fphash").textContent = shortHash;
+  document.getElementById("fpmeta").innerHTML =
+    "<span><b>" + total + "</b> attributes read</span>" +
+    "<span><b>" + high + "</b> identifying</span>" +
+    "<span><b>" + parts.length + "</b> hashed into ID</span>";
+
+  /* ---------------------------- meter ---------------------------- */
+  const pct = Math.round((high / total) * 100);
+  const bar = document.getElementById("meterBar");
+  requestAnimationFrame(() => { bar.style.width = Math.max(4, pct) + "%"; });
+  document.getElementById("meterVal").textContent = pct + "% identifying";
+  document.getElementById("meterNote").textContent =
+    high + " of " + total + " values are strong identifiers (GPU, screen geometry, fonts, hashes, locale). " +
+    "Paste " + shortHash.replace(/ /g, "") + " into a second browser on this machine — it will differ. " +
+    "Compare two visits from the same browser and it stays identical.";
+
+  /* ================================================================== *
+   *  DOSSIER — consolidated record at the bottom of the page
+   * ================================================================== */
+  const val = {};
+  sections.forEach(s => s.rows.forEach(r => { if (r.v !== null) val[s.title + "::" + r.k] = r.v; }));
+  const get = (sectionTitle, key) => (val[sectionTitle + "::" + key] === undefined ? null : val[sectionTitle + "::" + key]);
+
+  const osLine = (() => {
+    if (/Windows NT 10/.test(ua)) return "Windows NT 10.0 — Windows 10 or 11";
+    if (/Windows NT 6\.3/.test(ua)) return "Windows 8.1";
+    if (/Mac OS X/.test(ua)) return "macOS";
+    if (/Android/.test(ua)) return "Android";
+    if (/iPhone|iPad|iPod/.test(ua)) return "iOS / iPadOS";
+    if (/Linux/.test(ua)) return "Linux";
+    return "unidentified";
+  })();
+
+  const gpuClean = (() => {
+    const g = get("GPU & rendering", "GPU renderer") || "";
+    const patterns = [
+      /(NVIDIA\s+(?:GeForce|RTX|GTX|Quadro|Tesla|Titan)[^,)]*)/i,
+      /(AMD\s+Radeon[^,)]*)/i,
+      /(Radeon[^,)]*)/i,
+      /(Intel\(R\)\s+[^,)]*)/i,
+      /(Intel[^,)]*)/i,
+      /(Apple\s+M\d[^,)]*)/i,
+      /(Mali[^,)]*)/i,
+      /(Adreno[^,)]*)/i
+    ];
+    for (const re of patterns) {
+      const m = re.exec(g);
+      if (m) {
+        return m[1]
+          .replace(/\s*\(0x[0-9A-Fa-f]+\)?/g, "")
+          .replace(/\s+/g, " ")
+          .replace(/[\s(]+$/, "")
+          .trim();
+      }
+    }
+    return g.replace(/^ANGLE\s*\(|\)$/g, "").replace(/\s+/g, " ").trim() || "not available";
+  })();
+
+  const isElectron = /Electron\//.test(ua);
+  const cores = get("Hardware", "Logical CPU cores");
+  const ram = get("Hardware", "Device memory");
+  const touch = get("Hardware", "Max touch points");
+  const tz = get("Locale & time", "Time zone");
+  const locale = get("Locale & time", "Locale");
+  const res = get("Display & viewport", "Screen resolution");
+  const dpr = get("Display & viewport", "Device pixel ratio");
+  const lanIps = get("Local network", "Addresses");
+  const dnt = get("Identity & browser", "Do Not Track");
+  const gpc = get("Identity & browser", "Global Privacy Control");
+  const fontCount = get("Installed fonts", "Fonts detected");
+  const matchedFonts = (get("Installed fonts", "Matched families") || "");
+
+  const officeFonts = ["Calibri", "Cambria", "Candara", "Palatino Linotype", "Segoe Print"]
+    .filter(f => matchedFonts.indexOf(f) !== -1);
+
+  const profile = [];
+  const push = (t, head, body) => profile.push({ t, head, body });
+
+  push("fact", "Operating system", osLine +
+    (get("Client Hints (high entropy)", "CPU architecture") ? " · " + get("Client Hints (high entropy)", "CPU architecture") : "") +
+    (get("Client Hints (high entropy)", "OS platform version") ? " · platform build " + get("Client Hints (high entropy)", "OS platform version") : ""));
+
+  push("fact", "Runtime", isElectron
+    ? "an embedded Electron app, not a normal browser tab — the host app name is in the user agent string"
+    : "a regular browser tab");
+
+  push("fact", "Display", (res || "unknown") + " at " + (dpr || "?") + "× pixel ratio · viewport " +
+    (get("Display & viewport", "Viewport") || "?") + " · " + (get("Display & viewport", "Colour scheme") || "?") + " theme");
+
+  push("fact", "Locale", (tz || "unknown timezone") + " · " + (get("Locale & time", "UTC offset") || "") + " · " + (locale || "?") +
+    " · numbers formatted as " + (get("Locale & time", "Number format") || "?"));
+
+  push("fact", "Graphics", gpuClean + " · " + (get("GPU & rendering", "WebGL version") || ""));
+
+  push("inference", "Machine class",
+    (touch === "0" && /desktop|GeForce|Radeon|RTX|GTX/i.test(gpuClean))
+      ? "desktop tower or gaming laptop — no touch input, discrete GPU present, " +
+        (cores ? cores + " logical cores" : "unknown core count") + (ram ? ", ~" + ram + " of RAM" : "")
+      : "uncertain — touch capability or GPU string does not match a plain desktop");
+
+  push("inference", "Software on disk",
+    officeFonts.length >= 2
+      ? "Microsoft Office is likely installed — " + officeFonts.slice(0, 3).join(", ") + " are present in the font list"
+      : "no strong software fingerprint from fonts beyond the OS defaults");
+
+  push("fact", "Network position", lanIps && lanIps !== "all masked (mDNS)"
+    ? "private LAN address " + lanIps + " — a home or office router in front of you; no public IP reachable from page JS"
+    : "local addresses masked by the browser; only coarse network class is visible");
+
+  push("inference", "Privacy posture",
+    (dnt === null && gpc === null)
+      ? "no Do Not Track or Global Privacy Control signal sent · cookies enabled · " +
+        (get("Permissions & devices", "geolocation") === "granted" ? "location already granted to this origin" : "location permission not yet granted")
+      : "browser is sending a privacy signal (DNT or GPC set)");
+
+  push("fact", "Identity stability",
+    "this exact combination hashes to " + shortHash.replace(/ /g, "") +
+    " and will repeat identically on every visit from this browser — while a different browser on the same machine produces a different value");
+
+  push("inference", "Uniqueness",
+    "the user agent alone is shared by millions; add " + (fontCount || "the") + " detected fonts, the exact GPU, screen geometry and canvas/audio hashes and the set is close to a single device");
+
+  const dosProfile = document.getElementById("dosProfile");
+  profile.forEach(p => {
+    const line = document.createElement("div");
+    line.className = "pline";
+    line.dataset.t = p.t;
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.textContent = p.t === "fact" ? "fact" : "guess";
+    const body = document.createElement("div");
+    const b = document.createElement("b");
+    b.textContent = p.head + " — ";
+    body.appendChild(b);
+    body.appendChild(document.createTextNode(p.body));
+    line.append(tag, body);
+    dosProfile.appendChild(line);
+  });
+
+  const dosList = document.getElementById("dosList");
+  const RANK = { high: "identifying", med: "semi", low: "common" };
+  sections.forEach(s => {
+    if (s.title === "What this page cannot see") return;
+    const group = document.createElement("div");
+    group.className = "dl-group";
+
+    const gh = document.createElement("div");
+    gh.className = "dl-gh";
+    gh.textContent = s.title + " ";
+    const cnt = document.createElement("span");
+    cnt.textContent = "/ " + s.rows.length + " values";
+    gh.appendChild(cnt);
+    group.appendChild(gh);
+
+    s.rows.forEach(r => {
+      const d = document.createElement("div");
+      d.className = "dl-row";
+
+      const k = document.createElement("div");
+      k.className = "dl-k";
+      k.textContent = r.k;
+
+      const v = document.createElement("div");
+      v.className = "dl-v" + (r.v === null ? " none" : "");
+      v.textContent = r.v === null ? "not exposed" : r.v;
+
+      const w = document.createElement("div");
+      w.className = "dl-w";
+      w.dataset.l = r.l;
+      w.textContent = RANK[r.l] || "";
+
+      d.append(k, v, w);
+      group.appendChild(d);
+    });
+
+    dosList.appendChild(group);
+  });
+
+  document.getElementById("dosStamp").textContent =
+    total + " values · " + new Date().toLocaleString();
+
+  const dosFoot = document.getElementById("dosFoot");
+  [
+    "● " + total + " values collected · " + high + " identifying · " + parts.length + " hashed",
+    "● fingerprint " + shortHash,
+    "● generated locally, never transmitted",
+    "● not knowable by page JS: public IP, other tabs, files on disk, camera or mic feed"
+  ].forEach(t => {
+    const sp = document.createElement("span");
+    sp.textContent = t;
+    dosFoot.appendChild(sp);
+  });
+
+  /* ================================================================== *
+   *  UNIQUENESS ESTIMATE — how small a crowd you stand in
+   * ================================================================== */
+  // Marginal entropy per dimension, in bits, drawn from the ranges in
+  // published fingerprinting studies (Panopticlick, AmIUnique). Correlated
+  // dimensions (canvas vs GPU, audio vs font stack) are already discounted.
+  const PRIORS = [
+    { s: "Identity & browser",          k: "User agent",        bits: 3.8, name: "user agent" },
+    { s: "Client Hints (high entropy)", k: "CPU architecture",  bits: 0.5, name: "architecture" },
+    { s: "Identity & browser",          k: "Languages",         bits: 1.2, name: "languages" },
+    { s: "Display & viewport",          k: "Screen resolution", bits: 2.6, name: "screen size" },
+    { s: "Display & viewport",          k: "Device pixel ratio", bits: 0.5, name: "pixel ratio" },
+    { s: "Display & viewport",          k: "Colour scheme",     bits: 0.4, name: "theme" },
+    { s: "Locale & time",               k: "Time zone",         bits: 2.2, name: "time zone" },
+    { s: "Locale & time",               k: "Locale",            bits: 0.8, name: "locale" },
+    { s: "Hardware",                    k: "Logical CPU cores", bits: 0.9, name: "CPU cores" },
+    { s: "Hardware",                    k: "Device memory",     bits: 0.5, name: "RAM tier" },
+    { s: "Hardware",                    k: "Max touch points",  bits: 0.4, name: "touch input" },
+    { s: "GPU & rendering",             k: "GPU renderer",      bits: 2.4, name: "GPU model" },
+    { s: "GPU & rendering",             k: "Canvas hash",       bits: 0.4, name: "canvas hash" },
+    { s: "GPU & rendering",             k: "Audio hash",        bits: 0.4, name: "audio hash" },
+    { s: "Installed fonts",             k: "Fonts detected",    bits: 2.0, name: "font set" },
+    { s: "Permissions & devices",       k: "Media devices",     bits: 0.6, name: "device list" }
+  ];
+
+  const activePriors = PRIORS.filter(p => get(p.s, p.k) !== null);
+  const rawBits = activePriors.reduce((a, p) => a + p.bits, 0);
+  const entropyBits = Math.max(8, Math.min(21, rawBits));
+  const estimate = Math.pow(2, entropyBits);
+
+  const twoSig = n => {
+    const mag = Math.pow(10, Math.floor(Math.log10(n)) - 1);
+    return Math.round(n / mag) * mag;
+  };
+  const estimateShown = twoSig(estimate);
+
+  document.getElementById("uniqN").textContent = estimateShown.toLocaleString();
+
+  // log scale: 1 device on the left, 1e9 on the right
+  const markPct = Math.max(1.5, Math.min(98.5, (Math.log10(estimate) / 9) * 100));
+  requestAnimationFrame(() => {
+    document.getElementById("uniqMark").style.left = markPct.toFixed(1) + "%";
+  });
+
+  const drivers = document.getElementById("uniqDrivers");
+  const lead = document.createElement("span");
+  lead.className = "lead";
+  lead.textContent = "biggest giveaways · ";
+  drivers.appendChild(lead);
+  [...activePriors].sort((a, b) => b.bits - a.bits).slice(0, 3).forEach((p, i) => {
+    if (i) {
+      const sep = document.createElement("span");
+      sep.className = "sep";
+      sep.textContent = "·";
+      drivers.appendChild(sep);
+    }
+    const name = document.createElement("span");
+    name.textContent = p.name + " ";
+    const b = document.createElement("b");
+    b.textContent = p.bits.toFixed(1) + "b";
+    name.appendChild(b);
+    drivers.appendChild(name);
+  });
+
+  document.getElementById("uniqNote").textContent =
+    "Estimate: " + entropyBits.toFixed(1) + " bits of entropy from " + activePriors.length +
+    " independent dimensions (2^" + entropyBits.toFixed(1) + " ≈ " + estimateShown.toLocaleString() + "). " +
+    "Average desktop browsers measure 17–19 bits in published studies, so read this as an order of magnitude, " +
+    "not a headcount. Add a font, change monitor resolution or swap GPU and the number moves.";
+
+  /* ---------------------------- raw json ---------------------------- */
+  const report = {
+    generatedAt: new Date().toISOString(),
+    fingerprint: fullHash,
+    fingerprintShort: shortHash,
+    summary: { attributes: total, identifying: high, semiIdentifying: med, hashedFields: parts.length, densityPercent: pct },
+    profile: profile.map(p => (p.t === "fact" ? "FACT: " : "INFERENCE: ") + p.head + " — " + p.body),
+    uniqueness: {
+      entropyBits: Number(entropyBits.toFixed(2)),
+      estimatedDevicesSharing: estimateShown,
+      dimensionsUsed: activePriors.length,
+      method: "sum of marginal entropy priors from published fingerprinting studies; capped at 21 bits"
+    },
+    sections: sections.map(s => ({
+      section: s.title,
+      rows: s.rows.map(r => ({ label: r.k, value: r.v, weight: r.l }))
+    })),
+    notice: "Collected and hashed entirely in this page. No network requests, no cookies, no storage."
+  };
+  const jsonEl = document.getElementById("json");
+  jsonEl.textContent = JSON.stringify(report, null, 2);
+
+  /* ---------------------------- actions ---------------------------- */
+  const toast = document.getElementById("toast");
+  let toastTimer;
+  function say(msg) {
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 1900);
+  }
+
+  document.getElementById("copyBtn").addEventListener("click", async () => {
+    const text = JSON.stringify(report, null, 2);
+    try {
+      await navigator.clipboard.writeText(text);
+      say("Report copied — " + total + " attributes");
+    } catch (e) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      say("Report copied");
+    }
+  });
+
+  document.getElementById("dlBtn").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "exposure-report-" + shortHash.replace(/ /g, "") + ".json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    say("Downloaded");
+  });
+
+  document.getElementById("wipeBtn").addEventListener("click", () => {
+    try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+    try {
+      document.cookie.split(";").forEach(c => {
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date(0).toUTCString() + ";path=/");
+      });
+    } catch (e) {}
+    say("Cleared — reloading");
+    setTimeout(() => location.reload(), 600);
+  });
+
+  document.getElementById("rawHead").addEventListener("click", e => {
+    e.currentTarget.classList.toggle("open");
+    jsonEl.classList.toggle("show");
+  });
+})();
+</script>
+</body>
+</html>
