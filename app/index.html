@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -56,7 +56,7 @@
 <body>
 <header>
   <h1>mainoneworld</h1>
-  <p class="tag">one developer Ā· big dreams Ā· low budget</p>
+  <p class="tag">one developer · big dreams · low budget</p>
 </header>
 
 <section class="tab active" id="tab-server">
@@ -64,22 +64,22 @@
     <div class="row">
       <div>
         <div class="stat">Server status</div>
-        <div id="onlineLine"><span class="dot off"></span><span id="onlineTxt">checkingā€¦</span></div>
+        <div id="onlineLine"><span class="dot off"></span><span id="onlineTxt">checking…</span></div>
       </div>
-      <button class="btn" style="width:auto;padding:8px 12px" onclick="loadStatus()">ā†»</button>
+      <button class="btn" style="width:auto;padding:8px 12px" onclick="loadStatus()">↻</button>
     </div>
     <div class="row" style="margin-top:14px">
-      <div><div class="big" id="pcount">ā€“</div><div class="stat">players online</div></div>
-      <div style="text-align:right"><div class="stat" id="ver" style="max-width:160px">ā€“</div><div class="stat">version</div></div>
+      <div><div class="big" id="pcount">–</div><div class="stat">players online</div></div>
+      <div style="text-align:right"><div class="stat" id="ver" style="max-width:160px">–</div><div class="stat">version</div></div>
     </div>
     <div class="chips" id="players"></div>
   </div>
 
-  <a class="btn pri" id="copyBtn" onclick="copyIP()">Copy IP Ā· mc.txtwall.xyz</a>
+  <a class="btn pri" id="copyBtn" onclick="copyIP()">Copy IP · mc.txtwall.xyz</a>
   <div style="height:10px"></div>
   <div class="grid">
-    <a class="btn" id="voteBtn" href="#" target="_blank" rel="noopener">š—³ļø¸ Vote (+200)</a>
-    <a class="btn" href="https://discord.com/invite/2eUSaHDq" target="_blank" rel="noopener">š’¬ Discord</a>
+    <a class="btn" id="voteBtn" href="#" target="_blank" rel="noopener">🗳️ Vote (+200)</a>
+    <a class="btn" href="https://discord.com/invite/2eUSaHDq" target="_blank" rel="noopener">💬 Discord</a>
   </div>
 </section>
 
@@ -102,9 +102,9 @@
 </section>
 
 <nav>
-  <button class="active" data-tab="server" onclick="show('server')">šˇ® Server</button>
-  <button data-tab="sites" onclick="show('sites')">š Sites</button>
-  <button data-tab="progress" onclick="show('progress')">ā™ļø¸ Progress</button>
+  <button class="active" data-tab="server" onclick="show('server')">🎮 Server</button>
+  <button data-tab="sites" onclick="show('sites')">🌐 Sites</button>
+  <button data-tab="progress" onclick="show('progress')">⚙️ Progress</button>
 </nav>
 
 <footer>FABRICATED &amp; MAINTAINED BY ZALLKYRE</footer>
@@ -117,13 +117,13 @@ document.getElementById("voteBtn").href = VOTE;
 const PROGRESS = [
   ["Discord bot", "mcbot on the Pi: /help /bal /baltop /online /ip /ping /vote"],
   ["Vote rewards", "200 coins per vote via Minecraft-MP API, auto-paid"],
-  ["Clip bounty", "#clips ā€” owner's ā… pays the poster"],
+  ["Clip bounty", "#clips — owner's ✅ pays the poster"],
   ["Economy tools", "/baltop ranks all players (offline incl.), excludes zallkyre"],
-  ["Voice chat", "Fixed ā€” playit UDP tunnel wired into voice_host"],
+  ["Voice chat", "Fixed — playit UDP tunnel wired into voice_host"],
   ["Watchdog", "auto-restarts paper / cloudflared / playit every 5 min"],
   ["Backups", "nightly world backup at 04:00 + Discord notify"],
   ["Playit tripwire", "alerts Discord if the tunnel address changes"],
-  ["Website", "VOLOS + ā‚¬5 TAG tabs live at txtwall.xyz"],
+  ["Website", "VOLOS + €5 TAG tabs live at txtwall.xyz"],
   ["Docs", "AI AGENTS READ THIS written on the server"],
 ];
 
@@ -154,14 +154,14 @@ async function loadStatus(){
       const list = j.players?.list || [];
       document.getElementById("players").innerHTML = list.length
         ? list.map(p=>`<span class="chip">${p.name_clean || p.name_raw}</span>`).join("")
-        : '<span class="chip">nobody online ā€” be the first</span>';
+        : '<span class="chip">nobody online — be the first</span>';
     }else{
       document.getElementById("pcount").textContent = "off";
       document.getElementById("ver").textContent = "offline";
       document.getElementById("players").innerHTML = '<span class="chip">server offline</span>';
     }
     document.getElementById("statusCard").querySelector(".stat:nth-child").textContent;
-    document.querySelector(".stat").textContent = "Server status Ā· " + new Date().toLocaleTimeString();
+    document.querySelector(".stat").textContent = "Server status · " + new Date().toLocaleTimeString();
   }catch(e){
     document.getElementById("onlineLine").innerHTML = `<span class="dot off"></span><span>status unavailable</span>`;
   }
@@ -171,8 +171,8 @@ async function loadStatus(){
 function copyIP(){
   navigator.clipboard?.writeText(HOST);
   const b = document.getElementById("copyBtn");
-  b.textContent = "Copied! ā†’ " + HOST;
-  setTimeout(()=>b.textContent = "Copy IP Ā· mc.txtwall.xyz", 1500);
+  b.textContent = "Copied! → " + HOST;
+  setTimeout(()=>b.textContent = "Copy IP · mc.txtwall.xyz", 1500);
 }
 
 loadStatus();
