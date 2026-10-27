@@ -1,0 +1,31 @@
+# Zallkyre
+
+> Portfolio and project index. Small self-contained browser tools, open-source utilities, and agent-facing infrastructure — mostly single-file, no frameworks, no build step.
+
+Everything here is open source. Pages are static and make no third-party requests.
+
+## Pages
+
+- [Home](https://zallkyre.github.io/): Project index, contribution stats, and links to everything below.
+- [Data — Exposure Report](https://zallkyre.github.io/data/): A privacy exposure report. Reads 82 attributes any page can access on load — user agent, screen geometry, time zone, installed fonts, GPU model, canvas and audio hashes, WebRTC local addresses, permission states — hashes them into one fingerprint, and estimates how small a crowd that signature puts you in. Everything is computed in the page; no network requests, no cookies, no storage.
+- [App](https://zallkyre.github.io/app/): Installable web app build, runs from the home screen.
+- [Save — droptok](https://zallkyre.github.io/save/): Installable TikTok saver.
+- [Download](https://zallkyre.github.io/download/): Direct APK builds.
+
+## Repositories
+
+- [chessbot](https://github.com/zallkyre/chessbot): Difficulty-slider chess bot and move grader built on Stockfish.
+- [chess-coach](https://github.com/zallkyre/chess-coach): Browser chess with instant move grading, threat arrows, and a Groq-backed coach.
+- [xbox-hid-reader](https://github.com/zallkyre/xbox-hid-reader): Read raw Xbox controller input on Windows with ctypes and hid.dll — sticks, triggers, buttons, paddles. No drivers, no pip installs.
+- [secrets-mcp](https://github.com/zallkyre/secrets-mcp): Give the agent a handle, not the key. MCP server that keeps API keys out of AI agent conversations.
+- [txtwall](https://github.com/zallkyre/txtwall): Encrypted anonymous text wall. Client-side AES-GCM, server stores only ciphertext. FastAPI + SQLite.
+- [ezblocks](https://github.com/zallkyre/ezblocks): A better GUI for structure blocks — search every structure in your world, set the size, save or place it without leaving the screen.
+- [volos](https://github.com/zallkyre/volos): Python library for the Volos hardware deck — magnetic modules, native Python, zero drivers.
+- [AI-Chatbot](https://github.com/zallkyre/AI-Chatbot): Simple lightweight open-source Discord bot.
+- [zalks-stats](https://github.com/zallkyre/zalks-stats): Stats tooling source.
+- [zallkyre](https://github.com/zallkyre/zallkyre): Profile README.
+
+## Notes
+
+- Code is MIT-licensed unless a repository says otherwise; reuse and remix freely.
+- Issues and pull requests are welcome.
