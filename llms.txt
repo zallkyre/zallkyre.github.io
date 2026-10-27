@@ -27,5 +27,5 @@ Everything here is open source. Pages are static and make no third-party request
 
 ## Notes
 
-- Code is MIT-licensed unless a repository says otherwise; reuse and remix freely.
+- Everything is MIT-0: use, modify, redistribute and resell with no conditions, no attribution, no warranty.
 - Issues and pull requests are welcome.
